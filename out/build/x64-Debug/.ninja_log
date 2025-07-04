@@ -1,15 +1,15 @@
 # ninja log v6
+381	846	7733173504722213	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_hidapi.h	a4aa1d76f823c5de
+11078	11798	7733173608057633	_deps/sdl-build/CMakeFiles/SDL2.dir/src/video/SDL_blit_slow.c.obj	8323423fd1c0b0d
+30936	33358	7733173806647052	_deps/sdl-build/CMakeFiles/SDL2-static.dir/src/audio/wasapi/SDL_wasapi.c.obj	7f53344e01e404b1
+627	1154	7733173508734604	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_name.h	b004c350adeb35ee
+1487	1957	7733173516618280	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_types.h	9ee92d2651f05aa2
+273	740	7733173502832895	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_events.h	598bdb909dea4cfb
+901	1525	7733173512446881	_deps/sdl-build/include/SDL2/SDL_rwops.h	1ba017e83a4d293d
 108	558	7733173499660325	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_atomic.h	3eed40486e0bbce5
 24930	26175	7733173746583118	_deps/sdl-build/CMakeFiles/SDL2-static.dir/src/render/opengles/SDL_render_gles.c.obj	30ecce2de834c3bf
 1013	1953	7733173513521200	_deps/sdl-build/include/SDL2/SDL_system.h	a6b6f1fc434aaebe
 6195	7841	7733173559227894	_deps/sdl-build/CMakeFiles/SDL2.dir/src/libm/s_atan.c.obj	33068e706a33ff44
-30936	33358	7733173806647052	_deps/sdl-build/CMakeFiles/SDL2-static.dir/src/audio/wasapi/SDL_wasapi.c.obj	7f53344e01e404b1
-11078	11798	7733173608057633	_deps/sdl-build/CMakeFiles/SDL2.dir/src/video/SDL_blit_slow.c.obj	8323423fd1c0b0d
-381	846	7733173504722213	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_hidapi.h	a4aa1d76f823c5de
-901	1525	7733173512446881	_deps/sdl-build/include/SDL2/SDL_rwops.h	1ba017e83a4d293d
-273	740	7733173502832895	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_events.h	598bdb909dea4cfb
-1487	1957	7733173516618280	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_types.h	9ee92d2651f05aa2
-627	1154	7733173508734604	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_name.h	b004c350adeb35ee
 450	919	7733173505889821	E:/MyLearn/Morpheus/out/build/x64-Debug/_deps/sdl-build/include/SDL2/SDL_keycode.h	71edd2d1dffcc142
 25426	27532	7733173751533217	_deps/sdl-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_blendline.c.obj	38ee233996adc2e
 575	1073	7733173507925579	_deps/sdl-build/include/SDL2/SDL_misc.h	64dd487c20c5f9d5
@@ -576,3 +576,13 @@
 37326	38808	7733173870545865	src/CMakeFiles/MorpheusApp.dir/renderer/Mesh.cpp.obj	943e2d264000e26d
 472	1068	7733164282350269	bin/MorpheusApp.exe	858f0b86fc4952a5
 37741	39320	7733173874691163	src/CMakeFiles/MorpheusApp.dir/scene/Scene.cpp.obj	45a6db8d7ba5ec75
+61	1084	7733195353594182	src/CMakeFiles/MorpheusApp.dir/main.cpp.obj	f916da21c23ec369
+590	1099	7733195358888214	src/CMakeFiles/MorpheusApp.dir/renderer/shaders/BlinnPhongShader.cpp.obj	9c45214cd0be6b6e
+443	1102	7733195357416029	src/CMakeFiles/MorpheusApp.dir/renderer/shaders/UnlitShader.cpp.obj	9d0b91265e571eab
+517	1111	7733195358152821	src/CMakeFiles/MorpheusApp.dir/renderer/Clipping.cpp.obj	73b12ee97d85dd4e
+662	1114	7733195359609431	src/CMakeFiles/MorpheusApp.dir/renderer/Texture.cpp.obj	276b9fdf83ef2b06
+138	1159	7733195354372548	src/CMakeFiles/MorpheusApp.dir/core/Application.cpp.obj	23f1630be08c5b05
+212	1162	7733195355113276	src/CMakeFiles/MorpheusApp.dir/renderer/Renderer.cpp.obj	4e9e4d6c553b8fbb
+290	1347	7733195355884742	src/CMakeFiles/MorpheusApp.dir/renderer/Mesh.cpp.obj	943e2d264000e26d
+364	1818	7733195356630333	src/CMakeFiles/MorpheusApp.dir/scene/Scene.cpp.obj	45a6db8d7ba5ec75
+1818	2551	7733195371165346	bin/MorpheusApp.exe	89ffe8e902e98a8e

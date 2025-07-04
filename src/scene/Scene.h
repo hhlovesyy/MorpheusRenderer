@@ -11,7 +11,7 @@
 // 前向声明nlohmann::json
 #include <nlohmann/json_fwd.hpp>
 // 前向声明
-namespace Morpheus::Renderer { class IShader; }
+namespace Morpheus::Renderer { class IShader; class Texture; }
 
 namespace Morpheus::Scene {
 
@@ -39,6 +39,8 @@ namespace Morpheus::Scene {
         std::map<std::string, std::shared_ptr<Renderer::Material>> m_materialCache;
         // --- 新增 Shader 缓存和创建工厂 ---
         std::map<std::string, std::shared_ptr<Renderer::IShader>> m_shaderCache;
+        // --- 新增纹理缓存 ---
+        std::map<std::string, std::shared_ptr<Renderer::Texture>> m_textureCache;
         // Shader 注册表/工厂
         // 键是Shader的名字 (e.g., "Unlit", "PBR")
         // 值是一个能创建对应Shader实例的函数

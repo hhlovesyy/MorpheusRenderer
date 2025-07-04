@@ -48,9 +48,12 @@ namespace Morpheus::Renderer {
                     };
                 }
 
-                // 暂时不处理法线和UV，但可以为以后预留位置
-                // if (index.normal_index >= 0) { ... }
-                // if (index.texcoord_index >= 0) { ... }
+                if (index.texcoord_index >= 0) {
+                    vertex.texCoords = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+                }
 
                 mesh.vertices.push_back(vertex);
                 // 注意：OBJ文件通常每个面有独立的顶点，所以我们直接用线性索引

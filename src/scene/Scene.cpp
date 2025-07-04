@@ -75,32 +75,60 @@ namespace Morpheus::Scene {
         }
 
         // 加载材质
-        if (data.contains("materials"))
-        {
-            for (const auto& mat_data : data["materials"])
-            {
+        if (data.contains("materials")) {
+            for (const auto& mat_data : data["materials"]) {
                 auto mat = std::make_shared<Renderer::Material>();
-                if (mat_data.contains("albedo")) {
-                    mat->albedo = { mat_data["albedo"][0], mat_data["albedo"][1], mat_data["albedo"][2], mat_data["albedo"][3] };
+                std::string material_name = mat_data["name"];
+
+                // --- 加载材质参数 ---
+
+                // 1. 加载 Albedo 颜色因子 (作为默认值或与纹理相乘)
+                if (mat_data.contains("albedo_factor")) {
+                    mat->albedo_factor = {
+                        mat_data["albedo_factor"][0],
+                        mat_data["albedo_factor"][1],
+                        mat_data["albedo_factor"][2],
+                        mat_data["albedo_factor"][3]
+                    };
                 }
+
+                // 2. 加载 Albedo 纹理 (这是新增的核心逻辑)
+                if (mat_data.contains("albedo_texture")) {
+                    std::string texture_path = mat_data["albedo_texture"];
+
+                    // 检查纹理缓存，避免重复加载
+                    if (scene.m_textureCache.find(texture_path) == scene.m_textureCache.end()) {
+                        // 如果缓存中没有，就加载新的纹理
+                        scene.m_textureCache[texture_path] = Renderer::Texture::Load(texture_path);
+                    }
+                    mat->albedo_texture = scene.m_textureCache[texture_path];
+                }
+
+                // 3. 加载其他光照参数
                 if (mat_data.contains("specular_shininess")) {
                     mat->specular_shininess = mat_data["specular_shininess"];
                 }
-                // --- 从工厂创建或从缓存获取 Shader ---
-                std::string shader_name = mat_data["shader"];
-                if (scene.m_shaderCache.find(shader_name) == scene.m_shaderCache.end()) {
-                    // 如果缓存中没有，就从工厂创建一个新的
-                    if (s_shaderFactory.count(shader_name)) {
-                        scene.m_shaderCache[shader_name] = s_shaderFactory[shader_name]();
-                    }
-                    else {
-                        // 抛出错误或使用一个默认的fallback shader
-                        throw std::runtime_error("Shader not registered: " + shader_name);
-                    }
-                }
-                mat->shader = scene.m_shaderCache[shader_name]; // 关联 Shader
 
-                scene.m_materialCache[mat_data["name"]] = mat;
+                // --- 关联 Shader (这部分逻辑不变) ---
+                if (mat_data.contains("shader")) {
+                    std::string shader_name = mat_data["shader"];
+                    if (scene.m_shaderCache.find(shader_name) == scene.m_shaderCache.end()) {
+                        if (s_shaderFactory.count(shader_name)) {
+                            scene.m_shaderCache[shader_name] = s_shaderFactory[shader_name]();
+                        }
+                        else {
+                            throw std::runtime_error("Shader not registered: " + shader_name);
+                        }
+                    }
+                    mat->shader = scene.m_shaderCache[shader_name];
+                }
+                else {
+                    // 如果没有指定shader，可以抛出错误或指定一个默认的
+                    throw std::runtime_error("Material '" + material_name + "' does not specify a shader.");
+                }
+
+                // 将最终创建好的材质存入材质缓存
+                scene.m_materialCache[material_name] = mat;
             }
         }
 

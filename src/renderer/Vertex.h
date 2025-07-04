@@ -9,6 +9,6 @@ namespace Morpheus::Renderer {
     struct Vertex {
         Math::Vector3f position;
         Math::Vector3f normal; // <--- 新增法线
-        // Math::Vector2f texCoords;
+        Math::Vector2f texCoords;
     };
 }

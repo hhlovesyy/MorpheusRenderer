@@ -15,32 +15,23 @@
     {
       "name": "Red_Phong",
       "shader": "BlinnPhong",
-      "albedo": [ 1.0, 1.0, 0.2, 1.0 ],
+      "albedo_texture": "assets/textures/MultiMeter_LP_1001_BaseColor.jpg",
       "specular_shininess": 32.0
     },
     {
       "name": "Green_Unlit",
       "shader": "Unlit",
-      "albedo": [ 0.2, 1.0, 0.2, 1.0 ]
+      "albedo_factor": [ 0.2, 1.0, 0.2, 1.0 ]
     }
   ],
   "objects": [
     {
-      "name": "Teapot1_Phong",
-      "mesh": "assets/models/teapot.obj",
+      "name": "TestSceneFromSketchfab",
+      "mesh": "assets/models/MutliMeter.obj",
       "material": "Red_Phong",
       "transform": {
-        "position": [ -5.0, 0, 0 ],
-        "scale": 1.5
-      }
-    },
-    {
-      "name": "Teapot2",
-      "mesh": "assets/models/teapot.obj",
-      "material": "Green_Unlit",
-      "transform": {
-        "position": [ 1.5, 0, 0 ],
-        "scale": 1.2
+        "position": [ 0, 0, 0 ],
+        "scale": 0.8
       }
     }
   ]

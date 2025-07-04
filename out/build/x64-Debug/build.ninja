@@ -4874,6 +4874,15 @@ build src\CMakeFiles\MorpheusApp.dir\renderer\shaders\BlinnPhongShader.cpp.obj: 
   TARGET_COMPILE_PDB = src\CMakeFiles\MorpheusApp.dir\
   TARGET_PDB = bin\MorpheusApp.pdb
 
+build src\CMakeFiles\MorpheusApp.dir\renderer\Texture.cpp.obj: CXX_COMPILER__MorpheusApp_unscanned_Debug E$:\MyLearn\Morpheus\src\renderer\Texture.cpp || cmake_object_order_depends_target_MorpheusApp
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -std:c++17 -MDd /W4 /WX-
+  INCLUDES = -IE:\MyLearn\Morpheus\src -IE:\MyLearn\Morpheus\out\build\x64-Debug\_deps\tinyobjloader-src -IE:\MyLearn\Morpheus\out\build\x64-Debug\_deps\stb-src -IE:\MyLearn\Morpheus\out\build\x64-Debug\_deps\nlohmann_json-src\include -IE:\MyLearn\Morpheus\out\build\x64-Debug\_deps\sdl-build\include -IE:\MyLearn\Morpheus\out\build\x64-Debug\_deps\sdl-build\include\SDL2 -IE:\MyLearn\Morpheus\out\build\x64-Debug\_deps\sdl-build\include-config-debug\SDL2
+  OBJECT_DIR = src\CMakeFiles\MorpheusApp.dir
+  OBJECT_FILE_DIR = src\CMakeFiles\MorpheusApp.dir\renderer
+  TARGET_COMPILE_PDB = src\CMakeFiles\MorpheusApp.dir\
+  TARGET_PDB = bin\MorpheusApp.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target MorpheusApp
@@ -4882,7 +4891,7 @@ build src\CMakeFiles\MorpheusApp.dir\renderer\shaders\BlinnPhongShader.cpp.obj: 
 #############################################
 # Link the executable bin\MorpheusApp.exe
 
-build bin\MorpheusApp.exe: CXX_EXECUTABLE_LINKER__MorpheusApp_Debug src\CMakeFiles\MorpheusApp.dir\main.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\Application.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Framebuffer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Renderer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Mesh.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\InputManager.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\CameraController.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Camera.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Scene.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\shaders\UnlitShader.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Clipping.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\shaders\BlinnPhongShader.cpp.obj | lib\SDL2maind.lib lib\SDL2d.lib || bin\SDL2d.dll lib\SDL2maind.lib
+build bin\MorpheusApp.exe: CXX_EXECUTABLE_LINKER__MorpheusApp_Debug src\CMakeFiles\MorpheusApp.dir\main.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\Application.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Framebuffer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Renderer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Mesh.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\InputManager.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\CameraController.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Camera.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Scene.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\shaders\UnlitShader.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Clipping.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\shaders\BlinnPhongShader.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Texture.cpp.obj | lib\SDL2maind.lib lib\SDL2d.lib || bin\SDL2d.dll lib\SDL2maind.lib
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -MDd
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
   LINK_LIBRARIES = lib\SDL2maind.lib  lib\SDL2d.lib  shell32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib

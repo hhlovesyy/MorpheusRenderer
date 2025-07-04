@@ -25,6 +25,7 @@ namespace Morpheus::Renderer {
         auto normal_matrix = std::any_cast<Math::Matrix4f>(uniforms["u_normal_matrix"]);
         Math::Vector4f world_normal_v4 = normal_matrix * Math::Vector4f{ in.normal.x(), in.normal.y(), in.normal.z(), 0.0f }; // 法线是方向，w=0
         out.world_normal = Math::normalize(Math::Vector3f{ world_normal_v4.x(), world_normal_v4.y(), world_normal_v4.z() });
+		out.uv = in.texCoords; // 传递纹理坐标
         return out;
     }
 
@@ -40,7 +41,11 @@ namespace Morpheus::Renderer {
         return {normal_color.x(), normal_color.y(), normal_color.z(), 1.0f};*/
 
         // 从 uniforms 获取光照和材质参数
-        auto base_color = std::any_cast<Math::Vector4f>(uniforms["u_albedo"]);
+        Math::Vector4f albedo = std::any_cast<Math::Vector4f>(uniforms["u_albedo_factor"]);
+        auto albedo_tex = std::any_cast<std::shared_ptr<Texture>>(uniforms["u_albedo_texture"]);
+        if (albedo_tex) {
+            albedo = albedo_tex->Sample(in.uv.x(), in.uv.y());
+        }
         auto shininess = std::any_cast<float>(uniforms["u_shininess"]);
         auto camera_pos = std::any_cast<Math::Vector3f>(uniforms["u_camera_pos"]);
         auto lights = std::any_cast<std::vector<Scene::DirectionalLight>>(uniforms["u_lights"]);
@@ -78,9 +83,9 @@ namespace Morpheus::Renderer {
 
         // 最终颜色 = (环境光 + 光照结果) * 物体基础色
         final_color_rgb = (ambient + final_color_rgb);
-        final_color_rgb.x() *= base_color.x();
-        final_color_rgb.y() *= base_color.y();
-        final_color_rgb.z() *= base_color.z();
+        final_color_rgb.x() *= albedo.x();
+        final_color_rgb.y() *= albedo.y();
+        final_color_rgb.z() *= albedo.z();
 
         //输出一下值
         /*std::cout << "Final Color RGB: (" 
@@ -88,6 +93,6 @@ namespace Morpheus::Renderer {
                   << final_color_rgb.y() << ", " 
 			<< final_color_rgb.z() << ")\n";*/
 
-        return { final_color_rgb.x(), final_color_rgb.y(), final_color_rgb.z(), base_color.w() };
+        return { final_color_rgb.x(), final_color_rgb.y(), final_color_rgb.z(), albedo.w() };
     }
 }

@@ -67,6 +67,10 @@ namespace Morpheus::Renderer {
                         (v1.world_normal * one_over_w1) * w1 +
                         (v2.world_normal * one_over_w2) * w2) * w_interp;
 
+                    interpolated_varyings.uv = ((v0.uv * one_over_w0) * w0 +
+                        (v1.uv * one_over_w1) * w1 +
+						(v2.uv * one_over_w2) * w2) * w_interp;
+
                     // 5. 调用片元着色器
                     Math::Vector4f final_color = shader.FragmentShader(interpolated_varyings);
 
@@ -93,6 +97,7 @@ namespace Morpheus::Renderer {
             }
 
             auto& shader = *object.material->shader;
+            const auto& material = *object.material;
 
             // 1. 设置 Shader Uniforms
             const Math::Matrix4f& modelMatrix = object.transform;
@@ -106,8 +111,9 @@ namespace Morpheus::Renderer {
             shader.uniforms["u_normal_matrix"] = modelMatrix.inverse().transpose();
 
             // 传递材质参数
-            shader.uniforms["u_albedo"] = object.material->albedo;
-            shader.uniforms["u_shininess"] = object.material->specular_shininess;
+            shader.uniforms["u_albedo_factor"] = material.albedo_factor;
+			shader.uniforms["u_albedo_texture"] = material.albedo_texture;
+            shader.uniforms["u_shininess"] = material.specular_shininess;
 
             // 传递场景信息
             shader.uniforms["u_camera_pos"] = camera.GetPosition();
