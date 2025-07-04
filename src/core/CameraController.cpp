@@ -18,6 +18,9 @@ namespace Morpheus::Core {
     void CameraController::Update(Scene::Camera* camera, float deltaTime) {
         if (!camera) return;
         auto& input = InputManager::Get();
+        const float rotationSpeed = 0.3f;
+        const float panSpeed = 0.5f;
+        const float zoomSpeed = 20.0f;
 
         // 检查 Alt 键是否被按下
         bool altPressed = input.IsKeyPressed(SDL_SCANCODE_LALT) || input.IsKeyPressed(SDL_SCANCODE_RALT);
@@ -27,8 +30,8 @@ namespace Morpheus::Core {
             // Alt + Left Mouse Button: Orbit (旋转)
             if (input.IsMouseButtonDown(1)) { // 1 is left mouse button
                 auto delta = input.GetMouseDelta();
-                m_yaw -= delta.x() * 0.005f;
-                m_pitch += delta.y() * 0.005f;
+                m_yaw -= delta.x() * rotationSpeed * deltaTime;
+                m_pitch += delta.y() * rotationSpeed * deltaTime;
                 // 限制pitch角度，防止万向节死锁和镜头翻转
                 m_pitch = std::clamp(m_pitch, -1.5f, 1.5f);
             }
@@ -51,23 +54,23 @@ namespace Morpheus::Core {
                 Math::Vector3f up = { sin_p * sin_y, cos_p, sin_p * cos_y };
 
                 // 根据鼠标位移和相机朝向来移动焦点
-                m_focalPoint.x() -= right.x() * delta.x() * 0.01f - up.x() * delta.y() * 0.01f;
-                m_focalPoint.y() -= right.y() * delta.x() * 0.01f - up.y() * delta.y() * 0.01f;
-                m_focalPoint.z() -= right.z() * delta.x() * 0.01f - up.z() * delta.y() * 0.01f;
+                m_focalPoint.x() -= right.x() * delta.x() * 0.01f - up.x() * delta.y() * panSpeed * deltaTime;
+                m_focalPoint.y() -= right.y() * delta.x() * 0.01f - up.y() * delta.y() * panSpeed * deltaTime;
+                m_focalPoint.z() -= right.z() * delta.x() * 0.01f - up.z() * delta.y() * panSpeed * deltaTime;
             }
 
             // Alt + Right Mouse Button: Zoom (缩放)
             if (input.IsMouseButtonDown(3)) { // 3 is right mouse button
                 auto delta = input.GetMouseDelta();
                 // 上下或左右移动都可以用于缩放，这里我们用 y 轴
-                m_distance -= delta.y() * 0.05f;
+                m_distance -= delta.y() * zoomSpeed * deltaTime;
             }
         }
 
         // Mouse Wheel: Zoom (无论是否按住Alt都生效)
         int scrollDelta = input.GetMouseScrollDelta();
         if (scrollDelta != 0) {
-            m_distance -= scrollDelta * 0.5f;
+            m_distance -= scrollDelta * 1.0f;
         }
 
         // 确保距离不会变成负数或过小

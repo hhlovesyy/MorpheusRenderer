@@ -92,6 +92,15 @@ namespace Morpheus::Scene {
                     };
                 }
 
+                if (mat_data.contains("alpha_factor"))
+                {
+                    mat->alpha_factor = mat_data["alpha_factor"];
+                }
+                else {
+                    // 如果没有指定 alpha_factor，默认值为 1.0
+                    mat->alpha_factor = 1.0f;
+                }
+
                 // 2. 加载 Albedo 纹理 (这是新增的核心逻辑)
                 if (mat_data.contains("albedo_texture")) {
                     std::string texture_path = mat_data["albedo_texture"];
@@ -112,6 +121,23 @@ namespace Morpheus::Scene {
                     }
                     mat->normal_texture = scene.m_textureCache[normal_texture_path];
 				}
+
+                // --- 新增：加载 render_queue ---
+                if (mat_data.contains("render_queue")) {
+                    std::string queue_name = mat_data["render_queue"];
+                    if (queue_name == "Transparent") {
+                        mat->render_queue = Renderer::RenderQueue::Transparent;
+                    }
+                    else if (queue_name == "Opaque") {
+                        mat->render_queue = Renderer::RenderQueue::Opaque;
+                    } 
+                    else if (queue_name == "Skybox") {
+                        mat->render_queue = Renderer::RenderQueue::Skybox;
+                    }
+                    else {
+                        throw std::runtime_error("Unknown render queue: " + queue_name);
+					}
+                }
 
                 // 3. 加载其他光照参数
                 if (mat_data.contains("specular_shininess")) {

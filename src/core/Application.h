@@ -36,5 +36,12 @@ namespace Morpheus::Core {
         std::unique_ptr<Renderer::Renderer> m_morpheusRenderer;
         std::unique_ptr<Scene::Scene> m_scene;
         std::unique_ptr<CameraController> m_cameraController; // <--- 新增
+
+        // --- 新增的帧率计数成员 ---
+        uint64_t m_lastFrameTime = 0;
+        uint64_t m_frameCounter = 0;
+        float m_fps = 0.0f;
+        float m_frameTime = 0.0f;
+        float m_fpsTimer = 0.0f;
     };
 }

@@ -53,6 +53,7 @@ namespace Morpheus::Renderer {
         // 这是最终与光照结果相乘的基础色
         auto albedo_factor = std::any_cast<Math::Vector4f>(uniforms["u_albedo_factor"]);
         auto albedo_tex = std::any_cast<std::shared_ptr<Texture>>(uniforms["u_albedo_texture"]);
+		float alpha_factor = std::any_cast<float>(uniforms["u_alpha_factor"]);
         Math::Vector4f albedo_color = albedo_factor; // 默认使用颜色因子
         if (albedo_tex) {
             albedo_color = albedo_tex->Sample(in.uv.x(), in.uv.y());
@@ -116,7 +117,7 @@ namespace Morpheus::Renderer {
         final_color_rgb.x() = std::clamp(final_color_rgb.x(), 0.0f, 1.0f);
         final_color_rgb.y() = std::clamp(final_color_rgb.y(), 0.0f, 1.0f);
         final_color_rgb.z() = std::clamp(final_color_rgb.z(), 0.0f, 1.0f);
-
-        return { final_color_rgb.x(), final_color_rgb.y(), final_color_rgb.z(), albedo_color.w() };
+        
+        return { final_color_rgb.x(), final_color_rgb.y(), final_color_rgb.z(), albedo_color.w() * alpha_factor};
     }
 }

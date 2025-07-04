@@ -586,3 +586,17 @@
 290	1347	7733195355884742	src/CMakeFiles/MorpheusApp.dir/renderer/Mesh.cpp.obj	943e2d264000e26d
 364	1818	7733195356630333	src/CMakeFiles/MorpheusApp.dir/scene/Scene.cpp.obj	45a6db8d7ba5ec75
 1818	2551	7733195371165346	bin/MorpheusApp.exe	89ffe8e902e98a8e
+603	1404	7733287930022658	src/CMakeFiles/MorpheusApp.dir/scene/Camera.cpp.obj	11a88d946a1b29c8
+451	1423	7733287928507317	src/CMakeFiles/MorpheusApp.dir/core/InputManager.cpp.obj	6c7a6f58a931acd9
+226	1431	7733287926253210	src/CMakeFiles/MorpheusApp.dir/renderer/Framebuffer.cpp.obj	892fcd09f3bdf3c0
+527	1439	7733287929258159	src/CMakeFiles/MorpheusApp.dir/core/CameraController.cpp.obj	da74ded111694498
+71	1465	7733287924706615	src/CMakeFiles/MorpheusApp.dir/main.cpp.obj	f916da21c23ec369
+764	1479	7733287931629705	src/CMakeFiles/MorpheusApp.dir/renderer/shaders/UnlitShader.cpp.obj	9d0b91265e571eab
+841	1490	7733287932397449	src/CMakeFiles/MorpheusApp.dir/renderer/Clipping.cpp.obj	73b12ee97d85dd4e
+916	1515	7733287933155101	src/CMakeFiles/MorpheusApp.dir/renderer/shaders/BlinnPhongShader.cpp.obj	9c45214cd0be6b6e
+994	1521	7733287933928419	src/CMakeFiles/MorpheusApp.dir/renderer/Texture.cpp.obj	276b9fdf83ef2b06
+150	1581	7733287925491376	src/CMakeFiles/MorpheusApp.dir/core/Application.cpp.obj	23f1630be08c5b05
+301	1635	7733287927002329	src/CMakeFiles/MorpheusApp.dir/renderer/Renderer.cpp.obj	4e9e4d6c553b8fbb
+378	1770	7733287927767899	src/CMakeFiles/MorpheusApp.dir/renderer/Mesh.cpp.obj	943e2d264000e26d
+683	2209	7733287930824814	src/CMakeFiles/MorpheusApp.dir/scene/Scene.cpp.obj	45a6db8d7ba5ec75
+2210	3103	7733287946088554	bin/MorpheusApp.exe	89ffe8e902e98a8e

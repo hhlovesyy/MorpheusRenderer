@@ -11,7 +11,7 @@
 #include <SDL.h>
 
 namespace Morpheus::Renderer {
-    // ... Renderer::Renderer(...) 和 Renderer::DrawLine(...) 函数保持不变 ...
+
 
     // --- 构造函数 ---
     Renderer::Renderer(int width, int height) {
@@ -34,7 +34,7 @@ namespace Morpheus::Renderer {
         m_tilePackets.resize(m_tiles.size());
     }
 
-    void Renderer::RasterizeTriangle(const Varyings& v0, const Varyings& v1, const Varyings& v2, IShader& shader, const Tile& tile) {
+    void Renderer::RasterizeTriangle(const Varyings& v0, const Varyings& v1, const Varyings& v2, IShader& shader, const Tile& tile, bool is_transparent_pass) {
         // 1. 视口变换 (与之前相同，但操作Varyings)
         int w = m_framebuffer->GetWidth();
         int h = m_framebuffer->GetHeight();
@@ -107,22 +107,85 @@ namespace Morpheus::Renderer {
                     Math::Vector4f final_color = shader.FragmentShader(interpolated_varyings);
 
                     // 6. 写入帧缓冲 (深度测试)
-                    m_framebuffer->SetPixel(x, y, z_interp, final_color);
+                    m_framebuffer->SetPixel(x, y, z_interp, final_color, !is_transparent_pass, is_transparent_pass);
                 }
             }
         }
     }
 
-    // --- 顶层 Render 函数 (现在更简洁) ---
-    void Renderer::Render(const Scene::Scene& scene) {
-        // 1. 顶点处理阶段 (单线程)
-        SetupFrame(scene);
+    void Renderer::ProcessRenderQueue(const std::vector<RenderCommand>& queue, const Scene::Scene& scene, bool is_transparent_pass)
+    {
+        m_renderPackets.clear(); // 清空上一帧的渲染包
 
-        // 2. 三角形分配阶段 (单线程)
-        DistributePacketsToTiles();
+        const auto& camera = scene.GetCamera();
+        const Math::Matrix4f& viewMatrix = camera.GetViewMatrix();
+        const Math::Matrix4f& projectionMatrix = camera.GetProjectionMatrix();
 
-        // 3. 瓦块渲染阶段 (多线程)
-        RenderTiles();
+        for (const auto& command : queue)
+        {
+            const auto& object = *command.object;
+            if (!object.mesh || !object.material || !object.material->shader) {
+                SDL_Log("Skipping object '%s': mesh or material or shader is null", object.name.c_str());
+                continue;
+            }
+
+            auto& shader = *object.material->shader;
+            const auto& material = *object.material;
+
+            // 1. 设置 Shader Uniforms
+            const Math::Matrix4f& modelMatrix = object.transform;
+            shader.uniforms["u_model"] = modelMatrix;
+            shader.uniforms["u_view"] = viewMatrix;
+            shader.uniforms["u_projection"] = projectionMatrix;
+            shader.uniforms["u_mvp"] = projectionMatrix * viewMatrix * modelMatrix;
+
+            // --- 新增的 Uniforms ---
+            // 计算并传递法线矩阵
+            shader.uniforms["u_normal_matrix"] = modelMatrix.inverse().transpose();
+
+            // 传递材质参数
+            shader.uniforms["u_albedo_factor"] = material.albedo_factor;
+            shader.uniforms["u_albedo_texture"] = material.albedo_texture;
+            shader.uniforms["u_normal_texture"] = material.normal_texture;
+            shader.uniforms["u_shininess"] = material.specular_shininess;
+			shader.uniforms["u_alpha_factor"] = material.alpha_factor;
+            // 传递场景信息
+            shader.uniforms["u_camera_pos"] = camera.GetPosition();
+            shader.uniforms["u_lights"] = scene.GetDirectionalLights(); // 直接传递整个vector
+
+            const auto& mesh = *object.mesh;
+            for (size_t i = 0; i < mesh.indices.size(); i += 3) {
+                // 2. 对每个顶点调用顶点着色器
+                Varyings v0_out = shader.VertexShader(mesh.vertices[mesh.indices[i]]);
+                Varyings v1_out = shader.VertexShader(mesh.vertices[mesh.indices[i + 1]]);
+                Varyings v2_out = shader.VertexShader(mesh.vertices[mesh.indices[i + 2]]);
+
+                // --- 2. 裁剪 ---
+                std::vector<Varyings> clipped_triangles = ClipTriangle(v0_out, v1_out, v2_out);
+
+                // 3. 遍历裁剪后产生的所有新三角形
+                for (size_t j = 0; j < clipped_triangles.size(); j += 3) {
+                    Varyings& cv0 = clipped_triangles[j];
+                    Varyings& cv1 = clipped_triangles[j + 1];
+                    Varyings& cv2 = clipped_triangles[j + 2];
+
+                    // 4. 对每个裁剪后的三角形进行透视除法
+                    cv0.position_clip = cv0.position_clip * (1.0f / cv0.position_clip.w());
+                    cv1.position_clip = cv1.position_clip * (1.0f / cv1.position_clip.w());
+                    cv2.position_clip = cv2.position_clip * (1.0f / cv2.position_clip.w());
+
+                    // --- 创建并存储渲染包 ---
+                    // 我们将处理好的顶点和指向当前 shader 的指针打包在一起
+                    m_renderPackets.push_back({ cv0, cv1, cv2, &shader });
+                }
+            }
+            if (!m_renderPackets.empty()) {
+                DistributePacketsToTiles();
+
+                // --- 修改 RenderTiles，让它知道当前是什么 Pass ---
+                RenderTiles(is_transparent_pass);
+            }
+        }
     }
 
     // --- 新增: DistributePacketsToTiles 函数 (核心逻辑) ---
@@ -166,24 +229,24 @@ namespace Morpheus::Renderer {
     }
 
     // --- RenderTileTask 函数 (现在极其高效) ---
-    void Renderer::RenderTileTask(size_t tile_index) {
+    void Renderer::RenderTileTask(size_t tile_index, bool is_transparent_pass) {
         const Tile& tile = m_tiles[tile_index];
         const std::vector<const RenderPacket*>& packets_for_this_tile = m_tilePackets[tile_index];
 
         // 只遍历分配给这个瓦块的、已经筛选过的三角形列表
         for (const RenderPacket* packet_ptr : packets_for_this_tile) {
             // 直接调用光栅化，不再需要任何粗粒度剔除
-            RasterizeTriangle(packet_ptr->v0, packet_ptr->v1, packet_ptr->v2, *packet_ptr->shader, tile);
+            RasterizeTriangle(packet_ptr->v0, packet_ptr->v1, packet_ptr->v2, *packet_ptr->shader, tile, is_transparent_pass);
         }
     }
 
     // --- RenderTiles 函数 (现在只负责分发 tile_index) ---
-    void Renderer::RenderTiles() {
+    void Renderer::RenderTiles(bool is_transparent_pass) {
         m_threads.clear();
         for (size_t i = 0; i < m_numThreads; ++i) {
-            m_threads.emplace_back([this, i]() {
+            m_threads.emplace_back([this, i, is_transparent_pass]() {
                 for (size_t tile_idx = i; tile_idx < m_tiles.size(); tile_idx += m_numThreads) {
-                    RenderTileTask(tile_idx);
+                    RenderTileTask(tile_idx, is_transparent_pass);
                 }
                 });
         }
@@ -193,74 +256,40 @@ namespace Morpheus::Renderer {
     }
 
     // --- Render 函数的完整重构 ---
-    void Renderer::SetupFrame(const Scene::Scene& scene) {
+    void Renderer::Render(const Scene::Scene& scene) {
         m_framebuffer->ClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         m_framebuffer->ClearDepth(1.0f);
 
-        m_renderPackets.clear(); // 清空上一帧的渲染包
+        // 2. 清空渲染队列
+        for (size_t i = 0; i < static_cast<size_t>(RenderQueue::Count); ++i) {
+            m_renderQueues[i].clear();
+        }
 
         const auto& camera = scene.GetCamera();
-        const Math::Matrix4f& viewMatrix = camera.GetViewMatrix();
-        const Math::Matrix4f& projectionMatrix = camera.GetProjectionMatrix();
+        const Math::Vector3f camera_pos = camera.GetPosition();
 
+        // 3. 分类物体
         for (const auto& object : scene.GetObjects()) {
-            if (!object.mesh || !object.material || !object.material->shader) {
-                SDL_Log("Skipping object '%s': mesh or material or shader is null", object.name.c_str());
-                continue;
-            }
-
-            auto& shader = *object.material->shader;
-            const auto& material = *object.material;
-
-            // 1. 设置 Shader Uniforms
-            const Math::Matrix4f& modelMatrix = object.transform;
-            shader.uniforms["u_model"] = modelMatrix;
-            shader.uniforms["u_view"] = viewMatrix;
-            shader.uniforms["u_projection"] = projectionMatrix;
-            shader.uniforms["u_mvp"] = projectionMatrix * viewMatrix * modelMatrix;
-
-            // --- 新增的 Uniforms ---
-            // 计算并传递法线矩阵
-            shader.uniforms["u_normal_matrix"] = modelMatrix.inverse().transpose();
-
-            // 传递材质参数
-            shader.uniforms["u_albedo_factor"] = material.albedo_factor;
-			shader.uniforms["u_albedo_texture"] = material.albedo_texture;
-			shader.uniforms["u_normal_texture"] = material.normal_texture;
-            shader.uniforms["u_shininess"] = material.specular_shininess;
-            
-            // 传递场景信息
-            shader.uniforms["u_camera_pos"] = camera.GetPosition();
-            shader.uniforms["u_lights"] = scene.GetDirectionalLights(); // 直接传递整个vector
-
-            const auto& mesh = *object.mesh;
-            for (size_t i = 0; i < mesh.indices.size(); i += 3) {
-                // 2. 对每个顶点调用顶点着色器
-                Varyings v0_out = shader.VertexShader(mesh.vertices[mesh.indices[i]]);
-                Varyings v1_out = shader.VertexShader(mesh.vertices[mesh.indices[i + 1]]);
-                Varyings v2_out = shader.VertexShader(mesh.vertices[mesh.indices[i + 2]]);
-
-                // --- 2. 裁剪 ---
-                std::vector<Varyings> clipped_triangles = ClipTriangle(v0_out, v1_out, v2_out);
-
-                // 3. 遍历裁剪后产生的所有新三角形
-                for (size_t j = 0; j < clipped_triangles.size(); j += 3) {
-                    Varyings& cv0 = clipped_triangles[j];
-                    Varyings& cv1 = clipped_triangles[j + 1];
-                    Varyings& cv2 = clipped_triangles[j + 2];
-
-                    // 4. 对每个裁剪后的三角形进行透视除法
-                    cv0.position_clip = cv0.position_clip * (1.0f / cv0.position_clip.w());
-                    cv1.position_clip = cv1.position_clip * (1.0f / cv1.position_clip.w());
-                    cv2.position_clip = cv2.position_clip * (1.0f / cv2.position_clip.w());
-
-                    // --- 创建并存储渲染包 ---
-                    // 我们将处理好的顶点和指向当前 shader 的指针打包在一起
-                    m_renderPackets.push_back({ cv0, cv1, cv2, &shader });
-                }
-                
-            }
+            if (!object.mesh || !object.material) continue;
+            float dist_sq = (object.transform[3].xyz() - camera_pos).length_squared();
+            m_renderQueues[static_cast<size_t>(object.material->render_queue)].push_back({ &object, dist_sq });
         }
+
+        // 4. 排序
+        auto& opaque_queue = m_renderQueues[static_cast<size_t>(RenderQueue::Opaque)];
+        std::sort(opaque_queue.begin(), opaque_queue.end(), [](const auto& a, const auto& b) {
+            return a.distance_to_camera_sq < b.distance_to_camera_sq; // 从近到远
+            });
+
+        auto& transparent_queue = m_renderQueues[static_cast<size_t>(RenderQueue::Transparent)];
+        std::sort(transparent_queue.begin(), transparent_queue.end(), [](const auto& a, const auto& b) {
+            return a.distance_to_camera_sq > b.distance_to_camera_sq; // 从远到近
+            });
+
+        // 5. 按顺序执行渲染 Pass
+        ProcessRenderQueue(opaque_queue, scene, false);
+        // ProcessRenderQueue(skybox_queue, scene, ...); // 未来渲染天空盒
+        ProcessRenderQueue(transparent_queue, scene, true);
     }
    
 }

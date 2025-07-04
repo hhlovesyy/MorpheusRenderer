@@ -23,15 +23,33 @@
       "name": "Green_Unlit",
       "shader": "Unlit",
       "albedo_factor": [ 0.2, 1.0, 0.2, 1.0 ]
+    },
+    {
+      "name": "BlinnPhong_Transparent",
+      "shader": "BlinnPhong",
+      "albedo_texture": "assets/textures/DamagedHelmet_baseColorTexture.jpg",
+      "alpha_factor": 0.5,
+      "normal_texture": "assets/textures/DamagedHelmet_normalTexture.jpg",
+      "render_queue": "Transparent",
+      "specular_shininess": 32.0
     }
   ],
   "objects": [
     {
       "name": "TestSceneFromSketchfab",
       "mesh": "assets/models/DamagedHelmet.obj",
-      "material": "Red_Phong",
+      "material": "BlinnPhong_Transparent",
       "transform": {
         "position": [ 0, 0, 0 ],
+        "scale": 2
+      }
+    },
+    {
+      "name": "TestSceneFromSketchfab_Collider",
+      "mesh": "assets/models/DamagedHelmet.obj",
+      "material": "Red_Phong",
+      "transform": {
+        "position": [ 2, 3, 0 ],
         "scale": 2
       }
     }

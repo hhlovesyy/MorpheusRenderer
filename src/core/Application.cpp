@@ -66,14 +66,47 @@ namespace Morpheus::Core {
     }
 
     void Application::Run() {
+        // --- 初始化计时器 ---
+        uint64_t last_counter = SDL_GetPerformanceCounter();
+
         while (m_isRunning) {
-            // 用InputManager替换旧的事件处理
+            // --- 计算 DeltaTime ---
+            uint64_t now = SDL_GetPerformanceCounter();
+            float deltaTime = (float)(now - last_counter) / (float)SDL_GetPerformanceFrequency();
+            last_counter = now;
+
+            // --- 更新帧率计数器 ---
+            m_frameCounter++;
+            m_fpsTimer += deltaTime;
+            if (m_fpsTimer >= 1.0f) { // 每秒更新一次
+                m_fps = (float)m_frameCounter / m_fpsTimer;
+                m_frameTime = (m_fpsTimer / (float)m_frameCounter) * 1000.0f; // 转换为毫秒
+
+                // 更新窗口标题
+                std::string title = m_title + " - FPS: " + std::to_string((int)m_fps) +
+                    " | Frametime: " + std::to_string(m_frameTime) + " ms";
+                SDL_SetWindowTitle(m_window, title.c_str());
+
+                // 重置计数器
+                m_frameCounter = 0;
+                m_fpsTimer = 0.0f;
+            }
+
+            // --- 主循环的其他部分 ---
             InputManager::Get().PollEvents();
             if (InputManager::Get().IsQuitRequested()) {
                 m_isRunning = false;
             }
-            Update(0.016f); // Assume 60fps for now
+
+            Update(deltaTime); // <--- 将计算出的 deltaTime 传递给 Update
             RenderFrame();
+        }
+    }
+
+    void Application::Update(float deltaTime) {
+        if (m_scene) {
+            // 将 deltaTime 传递给控制器，用于实现与帧率无关的移动
+            m_cameraController->Update(&m_scene->GetCamera(), deltaTime);
         }
     }
 
@@ -83,12 +116,6 @@ namespace Morpheus::Core {
             if (e.type == SDL_QUIT) {
                 m_isRunning = false;
             }
-        }
-    }
-
-    void Application::Update(float deltaTime) {
-        if (m_scene) {
-            m_cameraController->Update(&m_scene->GetCamera(), deltaTime);
         }
     }
 

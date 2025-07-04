@@ -13,8 +13,17 @@ namespace Morpheus::Math {
             memset(m, 0, sizeof(m));
         }
 
-        float* operator[](size_t i) { return m[i]; }
-        const float* operator[](size_t i) const { return m[i]; }
+        /*float* operator[](size_t i) { return m[i]; }
+        const float* operator[](size_t i) const { return m[i]; }*/
+        //[]返回值应该是一个Vector
+        Vector4f& operator[](size_t i) {
+            assert(i < 4);
+            return reinterpret_cast<Vector4f&>(m[i]);
+		}
+        const Vector4f& operator[](size_t i) const {
+            assert(i < 4);
+            return reinterpret_cast<const Vector4f&>(m[i]);
+		}
 
         Matrix4f operator*(const Matrix4f& other) const {
             Matrix4f result;
