@@ -104,6 +104,15 @@ namespace Morpheus::Scene {
                     mat->albedo_texture = scene.m_textureCache[texture_path];
                 }
 
+				// 2. 加载法线贴图 (如果有的话)
+                if (mat_data.contains("normal_texture")) {
+                    std::string normal_texture_path = mat_data["normal_texture"];
+                    if (scene.m_textureCache.find(normal_texture_path) == scene.m_textureCache.end()) {
+                        scene.m_textureCache[normal_texture_path] = Renderer::Texture::Load(normal_texture_path);
+                    }
+                    mat->normal_texture = scene.m_textureCache[normal_texture_path];
+				}
+
                 // 3. 加载其他光照参数
                 if (mat_data.contains("specular_shininess")) {
                     mat->specular_shininess = mat_data["specular_shininess"];

@@ -7,7 +7,7 @@
     {
       "type": "directional",
       "direction": [ -0.5, 0.0, 0.5 ],
-      "color": [ 1.0, 0.5, 1.0 ],
+      "color": [ 1.0, 1.0, 1.0 ],
       "intensity": 3.0
     }
   ],
@@ -15,7 +15,8 @@
     {
       "name": "Red_Phong",
       "shader": "BlinnPhong",
-      "albedo_texture": "assets/textures/MultiMeter_LP_1001_BaseColor.jpg",
+      "albedo_texture": "assets/textures/DamagedHelmet_baseColorTexture.jpg",
+      "normal_texture": "assets/textures/DamagedHelmet_normalTexture.jpg",
       "specular_shininess": 32.0
     },
     {
@@ -27,11 +28,11 @@
   "objects": [
     {
       "name": "TestSceneFromSketchfab",
-      "mesh": "assets/models/MutliMeter.obj",
+      "mesh": "assets/models/DamagedHelmet.obj",
       "material": "Red_Phong",
       "transform": {
         "position": [ 0, 0, 0 ],
-        "scale": 0.8
+        "scale": 2
       }
     }
   ]

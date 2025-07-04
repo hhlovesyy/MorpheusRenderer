@@ -245,4 +245,41 @@ namespace Morpheus::Math {
             return result;
         }
     };
+
+    // --- 新增 Matrix3f 的定义 ---
+    class Matrix3f {
+    public:
+        float m[3][3];
+
+        Matrix3f() {
+            memset(m, 0, sizeof(m));
+        }
+
+        float* operator[](size_t i) { return m[i]; }
+        const float* operator[](size_t i) const { return m[i]; }
+
+        // 矩阵 * 向量
+        Vector3f operator*(const Vector3f& v) const {
+            Vector3f res{};
+            for (int i = 0; i < 3; ++i) {
+                res[i] = m[i][0] * v.x() + m[i][1] * v.y() + m[i][2] * v.z();
+            }
+            return res;
+        }
+
+        // 从 Matrix4f 构造 (提取左上角的 3x3 部分)
+        explicit Matrix3f(const Matrix4f& mat4) {
+            for (int i = 0; i < 3; ++i) {
+                for (int j = 0; j < 3; ++j) {
+                    m[i][j] = mat4.m[i][j];
+                }
+            }
+        }
+
+        static Matrix3f Identity() {
+            Matrix3f mat;
+            mat.m[0][0] = mat.m[1][1] = mat.m[2][2] = 1.0f;
+            return mat;
+        }
+    };
 }

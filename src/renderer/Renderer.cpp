@@ -71,6 +71,12 @@ namespace Morpheus::Renderer {
                         (v1.uv * one_over_w1) * w1 +
 						(v2.uv * one_over_w2) * w2) * w_interp;
 
+                    interpolated_varyings.tangent_space_light_dir = ((v0.tangent_space_light_dir * one_over_w0) * w0 +
+                        (v1.tangent_space_light_dir * one_over_w1) * w1 +
+						(v2.tangent_space_light_dir * one_over_w2) * w2) * w_interp;
+                    interpolated_varyings.tangent_space_view_dir = ((v0.tangent_space_view_dir * one_over_w0) * w0 +
+						(v1.tangent_space_view_dir * one_over_w1) * w1 + (v2.tangent_space_view_dir * one_over_w2) * w2) * w_interp;
+
                     // 5. 调用片元着色器
                     Math::Vector4f final_color = shader.FragmentShader(interpolated_varyings);
 
@@ -113,8 +119,9 @@ namespace Morpheus::Renderer {
             // 传递材质参数
             shader.uniforms["u_albedo_factor"] = material.albedo_factor;
 			shader.uniforms["u_albedo_texture"] = material.albedo_texture;
+			shader.uniforms["u_normal_texture"] = material.normal_texture;
             shader.uniforms["u_shininess"] = material.specular_shininess;
-
+            
             // 传递场景信息
             shader.uniforms["u_camera_pos"] = camera.GetPosition();
             shader.uniforms["u_lights"] = scene.GetDirectionalLights(); // 直接传递整个vector

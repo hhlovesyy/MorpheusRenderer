@@ -7,6 +7,61 @@
 #include <tiny_obj_loader.h>
 
 namespace Morpheus::Renderer {
+    void CalculateTangents(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) {
+        if (vertices.empty() || indices.empty()) return;
+
+        // 创建一个临时数组来累加每个顶点的切线和副切线
+        std::vector<Math::Vector3f> temp_tangents(vertices.size(), { 0, 0, 0 });
+        std::vector<Math::Vector3f> temp_bitangents(vertices.size(), { 0, 0, 0 });
+
+        for (size_t i = 0; i < indices.size(); i += 3) {
+            Vertex& v0 = vertices[indices[i]];
+            Vertex& v1 = vertices[indices[i + 1]];
+            Vertex& v2 = vertices[indices[i + 2]];
+
+            // 计算边和UV差
+            Math::Vector3f edge1 = v1.position - v0.position;
+            Math::Vector3f edge2 = v2.position - v0.position;
+            Math::Vector2f deltaUV1 = v1.texCoords - v0.texCoords;
+            Math::Vector2f deltaUV2 = v2.texCoords - v0.texCoords;
+
+            float f = 1.0f / (deltaUV1.x() * deltaUV2.y() - deltaUV2.x() * deltaUV1.y());
+            if (std::isinf(f) || std::isnan(f)) f = 0.0f;
+
+            Math::Vector3f tangent;
+            tangent.x() = f * (deltaUV2.y() * edge1.x() - deltaUV1.y() * edge2.x());
+            tangent.y() = f * (deltaUV2.y() * edge1.y() - deltaUV1.y() * edge2.y());
+            tangent.z() = f * (deltaUV2.y() * edge1.z() - deltaUV1.y() * edge2.z());
+
+            Math::Vector3f bitangent;
+            bitangent.x() = f * (-deltaUV2.x() * edge1.x() + deltaUV1.x() * edge2.x());
+            bitangent.y() = f * (-deltaUV2.x() * edge1.y() + deltaUV1.x() * edge2.y());
+            bitangent.z() = f * (-deltaUV2.x() * edge1.z() + deltaUV1.x() * edge2.z());
+
+            // 累加到三个顶点上
+            temp_tangents[indices[i]] = temp_tangents[indices[i]] + tangent;
+            temp_tangents[indices[i + 1]] = temp_tangents[indices[i + 1]] + tangent;
+            temp_tangents[indices[i + 2]] = temp_tangents[indices[i + 2]] + tangent;
+
+            temp_bitangents[indices[i]] = temp_bitangents[indices[i]] + bitangent;
+            temp_bitangents[indices[i + 1]] = temp_bitangents[indices[i + 1]] + bitangent;
+            temp_bitangents[indices[i + 2]] = temp_bitangents[indices[i + 2]] + bitangent;
+        }
+
+        // 对每个顶点进行 Gram-Schmidt 正交化和归一化
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const Math::Vector3f& n = vertices[i].normal;
+            const Math::Vector3f& t = temp_tangents[i];
+
+            // 正交化
+            vertices[i].tangent = Math::normalize(t - n * Math::dot(n, t));
+
+            // 计算副切线的手性 (handedness)
+            if (Math::dot(Math::cross(n, vertices[i].tangent), temp_bitangents[i]) < 0.0f) {
+                vertices[i].tangent = vertices[i].tangent * -1.0f;
+            }
+        }
+    }
 
     Mesh Mesh::LoadFromObj(const std::string& filepath) {
         Mesh mesh;
@@ -60,6 +115,8 @@ namespace Morpheus::Renderer {
                 mesh.indices.push_back(mesh.indices.size());
             }
         }
+        CalculateTangents(mesh.vertices, mesh.indices);
+        SDL_Log("Calculated tangents for mesh: %s", filepath.c_str());
         return mesh;
     }
 

@@ -95,6 +95,12 @@ namespace Morpheus::Math {
         const T& z() const { if constexpr (N > 2) return data[2]; }
         T& w() { if constexpr (N > 3) return data[3]; }
         const T& w() const { if constexpr (N > 3) return data[3]; }
+
+        //加一个xyz()函数，方便
+        vec<3, T> xyz() const {
+            static_assert(N >= 3, "xyz() can only be called on vectors with at least 3 components");
+            return { data[0], data[1], data[2] };
+		}
     };
 
     // 向量类型别名

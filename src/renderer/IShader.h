@@ -26,6 +26,11 @@ namespace Morpheus::Renderer {
         // Math::Vector3f world_pos;
         Math::Vector3f world_normal;
         Math::Vector2f uv;
+
+        // 我们不再需要插值 world_normal，因为光照计算在切线空间进行
+        // 我们需要的是将向量变换到切线空间的矩阵
+        Math::Vector3f tangent_space_light_dir;
+        Math::Vector3f tangent_space_view_dir;
     };
 
     // --- Shader 接口 ---
