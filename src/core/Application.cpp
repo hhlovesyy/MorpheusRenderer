@@ -7,11 +7,16 @@
 #include "InputManager.h"  
 #include "CameraController.h" // <--- 新增
 #include "../renderer/shaders/UnlitShader.h" // <--- 包含我们要注册的 Shader
+#include "../renderer/shaders/BlinnPhongShader.h" // <--- 包含 BlinnPhong Shader
 
 // --- 在所有 Application 成员函数之前，定义一个辅助函数 ---
 void RegisterShaders() {
     Morpheus::Scene::Scene::RegisterShader("Unlit", []() {
         return std::make_shared<Morpheus::Renderer::UnlitShader>();
+        });
+    // --- 新增 Blinn-Phong 的注册 ---
+    Morpheus::Scene::Scene::RegisterShader("BlinnPhong", []() {
+        return std::make_shared<Morpheus::Renderer::BlinnPhongShader>();
         });
     // 未来在这里注册 PBR Shader 等
     // Morpheus::Scene::Scene::RegisterShader("PBR", []() { 

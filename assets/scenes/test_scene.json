@@ -3,35 +3,44 @@
     "position": [ 0, 2, 5 ],
     "focal_point": [ 0, 0, 0 ]
   },
+  "lights": [
+    {
+      "type": "directional",
+      "direction": [ -0.5, 0.0, 0.5 ],
+      "color": [ 1.0, 0.5, 1.0 ],
+      "intensity": 3.0
+    }
+  ],
   "materials": [
     {
-      "name": "Red",
-      "shader": "Unlit",
-      "color": [ 1.0, 0.2, 0.2, 1.0 ]
+      "name": "Red_Phong",
+      "shader": "BlinnPhong",
+      "albedo": [ 1.0, 1.0, 0.2, 1.0 ],
+      "specular_shininess": 32.0
     },
     {
-      "name": "Green",
+      "name": "Green_Unlit",
       "shader": "Unlit",
-      "color": [ 0.2, 1.0, 0.2, 1.0 ]
+      "albedo": [ 0.2, 1.0, 0.2, 1.0 ]
     }
   ],
   "objects": [
     {
-      "name": "Teapot1",
+      "name": "Teapot1_Phong",
       "mesh": "assets/models/teapot.obj",
-      "material": "Red",
+      "material": "Red_Phong",
       "transform": {
-        "position": [ -1.5, 0, 0 ],
-        "scale": 1.0
+        "position": [ -5.0, 0, 0 ],
+        "scale": 1.5
       }
     },
     {
       "name": "Teapot2",
       "mesh": "assets/models/teapot.obj",
-      "material": "Green",
+      "material": "Green_Unlit",
       "transform": {
         "position": [ 1.5, 0, 0 ],
-        "scale": 1.0
+        "scale": 1.2
       }
     }
   ]

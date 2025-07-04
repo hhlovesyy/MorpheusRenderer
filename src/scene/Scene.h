@@ -2,6 +2,7 @@
 #pragma once
 #include "SceneObject.h"
 #include "Camera.h"
+#include "Light.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -25,12 +26,13 @@ namespace Morpheus::Scene {
         const std::vector<SceneObject>& GetObjects() const { return m_objects; }
         // --- 新增一个静态方法用于注册 Shader ---
         static void RegisterShader(const std::string& name, std::function<std::shared_ptr<Renderer::IShader>()> factoryFn);
-        
+        const std::vector<DirectionalLight>& GetDirectionalLights() const { return m_directionalLights; }
     private:
         Scene() = default;
 
         Camera m_camera;
         std::vector<SceneObject> m_objects;
+        std::vector<DirectionalLight> m_directionalLights;
 
         // 资源缓存，防止重复加载
         std::map<std::string, std::shared_ptr<Renderer::Mesh>> m_meshCache;

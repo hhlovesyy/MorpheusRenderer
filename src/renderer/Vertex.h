@@ -8,7 +8,7 @@
 namespace Morpheus::Renderer {
     struct Vertex {
         Math::Vector3f position;
-        // Math::Vector3f normal; // 为未来光照做准备
+        Math::Vector3f normal; // <--- 新增法线
         // Math::Vector2f texCoords;
     };
 }

@@ -1,5 +1,6 @@
 #include "Mesh.h"
 #include <stdexcept>
+#include <SDL.h>
 
 // 在这里，且只在这里，定义实现宏
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -24,6 +25,9 @@ namespace Morpheus::Renderer {
             }
             throw std::runtime_error("Failed to load OBJ file for unknown reasons.");
         }
+        if (attrib.normals.empty()) {
+            SDL_Log("Warning: Mesh '%s' has no normals in file!", filepath.c_str());
+        }
 
         // 遍历所有顶点数据
         for (const auto& shape : shapes) {
@@ -34,6 +38,15 @@ namespace Morpheus::Renderer {
                     attrib.vertices[3 * index.vertex_index + 1],
                     attrib.vertices[3 * index.vertex_index + 2]
                 };
+
+                // --- 新增加载法线的代码 ---
+                if (index.normal_index >= 0) {
+                    vertex.normal = {
+                        attrib.normals[3 * index.normal_index + 0],
+                        attrib.normals[3 * index.normal_index + 1],
+                        attrib.normals[3 * index.normal_index + 2]
+                    };
+                }
 
                 // 暂时不处理法线和UV，但可以为以后预留位置
                 // if (index.normal_index >= 0) { ... }

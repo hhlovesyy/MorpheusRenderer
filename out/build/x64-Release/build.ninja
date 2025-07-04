@@ -4865,6 +4865,15 @@ build src\CMakeFiles\MorpheusApp.dir\renderer\Clipping.cpp.obj: CXX_COMPILER__Mo
   TARGET_COMPILE_PDB = src\CMakeFiles\MorpheusApp.dir\
   TARGET_PDB = bin\MorpheusApp.pdb
 
+build src\CMakeFiles\MorpheusApp.dir\renderer\shaders\BlinnPhongShader.cpp.obj: CXX_COMPILER__MorpheusApp_unscanned_RelWithDebInfo E$:\MyLearn\Morpheus\src\renderer\shaders\BlinnPhongShader.cpp || cmake_object_order_depends_target_MorpheusApp
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++17 -MD /W4 /WX-
+  INCLUDES = -IE:\MyLearn\Morpheus\src -IE:\MyLearn\Morpheus\out\build\x64-Release\_deps\tinyobjloader-src -IE:\MyLearn\Morpheus\out\build\x64-Release\_deps\stb-src -IE:\MyLearn\Morpheus\out\build\x64-Release\_deps\nlohmann_json-src\include -IE:\MyLearn\Morpheus\out\build\x64-Release\_deps\sdl-build\include -IE:\MyLearn\Morpheus\out\build\x64-Release\_deps\sdl-build\include\SDL2 -IE:\MyLearn\Morpheus\out\build\x64-Release\_deps\sdl-build\include-config-relwithdebinfo\SDL2
+  OBJECT_DIR = src\CMakeFiles\MorpheusApp.dir
+  OBJECT_FILE_DIR = src\CMakeFiles\MorpheusApp.dir\renderer\shaders
+  TARGET_COMPILE_PDB = src\CMakeFiles\MorpheusApp.dir\
+  TARGET_PDB = bin\MorpheusApp.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target MorpheusApp
@@ -4873,12 +4882,12 @@ build src\CMakeFiles\MorpheusApp.dir\renderer\Clipping.cpp.obj: CXX_COMPILER__Mo
 #############################################
 # Link the executable bin\MorpheusApp.exe
 
-build bin\MorpheusApp.exe: CXX_EXECUTABLE_LINKER__MorpheusApp_RelWithDebInfo src\CMakeFiles\MorpheusApp.dir\main.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\Application.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Framebuffer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Renderer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Mesh.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\InputManager.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\CameraController.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Camera.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Scene.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\shaders\UnlitShader.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Clipping.cpp.obj | lib\SDL2main.lib lib\SDL2.lib || bin\SDL2.dll lib\SDL2main.lib
+build bin\MorpheusApp.exe: CXX_EXECUTABLE_LINKER__MorpheusApp_RelWithDebInfo src\CMakeFiles\MorpheusApp.dir\main.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\Application.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Framebuffer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Renderer.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Mesh.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\InputManager.cpp.obj src\CMakeFiles\MorpheusApp.dir\core\CameraController.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Camera.cpp.obj src\CMakeFiles\MorpheusApp.dir\scene\Scene.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\shaders\UnlitShader.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\Clipping.cpp.obj src\CMakeFiles\MorpheusApp.dir\renderer\shaders\BlinnPhongShader.cpp.obj | lib\SDL2main.lib lib\SDL2.lib || bin\SDL2.dll lib\SDL2main.lib
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /Zi /O2 /Ob1 /DNDEBUG -MD
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
   LINK_LIBRARIES = lib\SDL2main.lib  lib\SDL2.lib  shell32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   OBJECT_DIR = src\CMakeFiles\MorpheusApp.dir
-  POST_BUILD = C:\windows\system32\cmd.exe /C "cd /D E:\MyLearn\Morpheus\out\build\x64-Release\src && "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_directory E:/MyLearn/Morpheus/assets E:/MyLearn/Morpheus/out/build/x64-Release/bin/assets"
+  POST_BUILD = C:\windows\system32\cmd.exe /C "cd /D E:\MyLearn\Morpheus\out\build\x64-Release\src && "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_directory E:/MyLearn/Morpheus/assets E:/MyLearn/Morpheus/out/build/x64-Release/bin/assets && cd /D E:\MyLearn\Morpheus\out\build\x64-Release\src && "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_directory E:/MyLearn/Morpheus/assets E:/MyLearn/Morpheus/out/build/x64-Release/bin/assets"
   PRE_LINK = cd .
   TARGET_COMPILE_PDB = src\CMakeFiles\MorpheusApp.dir\
   TARGET_FILE = bin\MorpheusApp.exe

@@ -8,6 +8,7 @@
 #include "../scene/Scene.h"
 #include "IShader.h"
 #include "../renderer/Clipping.h"
+#include <SDL.h>
 
 namespace Morpheus::Renderer {
     // ... Renderer::Renderer(...) 和 Renderer::DrawLine(...) 函数保持不变 ...
@@ -62,6 +63,10 @@ namespace Morpheus::Renderer {
                         (v1.color * one_over_w1) * w1 +
                         (v2.color * one_over_w2) * w2) * w_interp;
 
+                    interpolated_varyings.world_normal = ((v0.world_normal * one_over_w0) * w0 +
+                        (v1.world_normal * one_over_w1) * w1 +
+                        (v2.world_normal * one_over_w2) * w2) * w_interp;
+
                     // 5. 调用片元着色器
                     Math::Vector4f final_color = shader.FragmentShader(interpolated_varyings);
 
@@ -83,21 +88,41 @@ namespace Morpheus::Renderer {
 
         for (const auto& object : scene.GetObjects()) {
             if (!object.mesh || !object.material || !object.material->shader) {
+                SDL_Log("Skipping object '%s': mesh or material or shader is null", object.name.c_str());
                 continue;
             }
 
             auto& shader = *object.material->shader;
 
             // 1. 设置 Shader Uniforms
-            shader.uniforms["u_mvp"] = projectionMatrix * viewMatrix * object.transform;
-            shader.uniforms["u_model"] = object.transform;
+            const Math::Matrix4f& modelMatrix = object.transform;
+            shader.uniforms["u_model"] = modelMatrix;
             shader.uniforms["u_view"] = viewMatrix;
             shader.uniforms["u_projection"] = projectionMatrix;
-            shader.uniforms["u_color"] = object.material->color;
-            // 未来可以传递更多uniforms, e.g., camera position, lights...
+            shader.uniforms["u_mvp"] = projectionMatrix * viewMatrix * modelMatrix;
+
+            // --- 新增的 Uniforms ---
+            // 计算并传递法线矩阵
+            shader.uniforms["u_normal_matrix"] = modelMatrix.inverse().transpose();
+
+            // 传递材质参数
+            shader.uniforms["u_albedo"] = object.material->albedo;
+            shader.uniforms["u_shininess"] = object.material->specular_shininess;
+
+            // 传递场景信息
+            shader.uniforms["u_camera_pos"] = camera.GetPosition();
+            shader.uniforms["u_lights"] = scene.GetDirectionalLights(); // 直接传递整个vector
 
             const auto& mesh = *object.mesh;
             for (size_t i = 0; i < mesh.indices.size(); i += 3) {
+                //// --- 步骤 B: 检查索引是否越界 ---
+                //if (mesh.indices[i] >= mesh.vertices.size() ||
+                //    mesh.indices[i + 1] >= mesh.vertices.size() ||
+                //    mesh.indices[i + 2] >= mesh.vertices.size())
+                //{
+                //    SDL_Log("Error: mesh '%s' has out-of-bounds indices!", object.name.c_str());
+                //    continue; // 跳过这个坏掉的三角形
+                //}
                 // 2. 对每个顶点调用顶点着色器
                 Varyings v0_out = shader.VertexShader(mesh.vertices[mesh.indices[i]]);
                 Varyings v1_out = shader.VertexShader(mesh.vertices[mesh.indices[i + 1]]);

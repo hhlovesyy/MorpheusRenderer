@@ -20,6 +20,15 @@ namespace Morpheus::Math {
             return data[i];
         }
 
+        //取反:-
+        vec<N, T> operator-() const {
+            vec<N, T> result;
+            for (size_t i = 0; i < N; ++i) {
+                result[i] = -data[i];
+            }
+            return result;
+		}
+
         // 向量 + 向量
         vec<N, T> operator+(const vec<N, T>& other) const {
             vec<N, T> result;
@@ -56,6 +65,26 @@ namespace Morpheus::Math {
             return result;
         }
 
+        // --- 新增的成员函数 ---
+        T length_squared() const {
+            T result = 0;
+            for (size_t i = 0; i < N; ++i) {
+                result += data[i] * data[i];
+            }
+            return result;
+        }
+
+        T length() const {
+            return std::sqrt(length_squared());
+        }
+
+        void normalize() {
+            T len = length();
+            if (len > 1e-6) { // Avoid division by zero
+                *this = *this / len;
+            }
+        }
+
         // --- 为了方便，我们可以添加 .x, .y, .z, .w 访问器 ---
         // --- 使用 if constexpr (C++17) 来确保只在维度足够时才编译这些函数 ---
         T& x() { if constexpr (N > 0) return data[0]; }
@@ -78,5 +107,37 @@ namespace Morpheus::Math {
         return { a.y() * b.z() - a.z() * b.y(),
                  a.z() * b.x() - a.x() * b.z(),
                  a.x() * b.y() - a.y() * b.x() };
+    }
+
+    // 向量 * 标量 (另一种写法，方便 a * v)
+    template<size_t N, typename T>
+    inline vec<N, T> operator*(T scalar, const vec<N, T>& v) {
+        return v * scalar;
+    }
+
+    // 点积 (Dot Product)
+    template<size_t N, typename T>
+    inline T dot(const vec<N, T>& a, const vec<N, T>& b) {
+        T result = 0;
+        for (size_t i = 0; i < N; ++i) {
+            result += a[i] * b[i];
+        }
+        return result;
+    }
+
+    // 归一化 (返回新向量，不修改原向量)
+    template<size_t N, typename T>
+    inline vec<N, T> normalize(const vec<N, T>& v) {
+        T len = v.length();
+        if (len > 1e-6) {
+            return v / len;
+        }
+        return v;
+    }
+
+    // 反射 (Reflect)
+    template<size_t N, typename T>
+    inline vec<N, T> reflect(const vec<N, T>& i, const vec<N, T>& n) {
+        return i - 2 * dot(i, n) * n;
     }
 }

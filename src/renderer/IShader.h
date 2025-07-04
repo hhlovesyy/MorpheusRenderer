@@ -24,7 +24,7 @@ namespace Morpheus::Renderer {
 
         // 自定义数据，例如：
         // Math::Vector3f world_pos;
-        // Math::Vector3f world_normal;
+        Math::Vector3f world_normal;
         // Math::Vector2f uv;
     };
 

@@ -6,7 +6,7 @@ add_executable(MorpheusApp
     core/Application.cpp
     renderer/Framebuffer.cpp
     renderer/Renderer.cpp
- "renderer/Mesh.cpp" "core/InputManager.cpp" "core/CameraController.cpp" "scene/Camera.cpp" "scene/Scene.cpp" "renderer/shaders/UnlitShader.cpp" "renderer/Clipping.cpp")
+ "renderer/Mesh.cpp" "core/InputManager.cpp" "core/CameraController.cpp" "scene/Camera.cpp" "scene/Scene.cpp" "renderer/shaders/UnlitShader.cpp" "renderer/Clipping.cpp" "renderer/shaders/BlinnPhongShader.cpp")
 
 # 递归查找所有 .h 文件，以便在VS的解决方案资源管理器中看到它们
 file(GLOB_RECURSE HEADERS "*.h")
@@ -32,6 +32,27 @@ target_link_libraries(MorpheusApp PRIVATE
     SDL2::SDL2main
     SDL2::SDL2
 )
+
+# 1. 找到所有资源文件
+file(GLOB_RECURSE ASSET_FILES "${CMAKE_SOURCE_DIR}/assets/*")
+
+# 2. 修改 add_custom_command
+add_custom_command(
+    TARGET MorpheusApp POST_BUILD  # 仍然是构建后执行
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/assets" 
+            "$<TARGET_FILE_DIR:MorpheusApp>/assets"
+    COMMENT "Copying assets directory..."
+    # --- 这是关键的新增部分 ---
+    # 告诉CMake，这个命令的执行依赖于 ASSET_FILES 列表中的所有文件
+    # 如果这些文件有任何变化，这个命令就需要重新触发
+    DEPENDS ${ASSET_FILES}
+    VERBATIM
+)
+
+# 3. 让这些文件在 Visual Studio 的解决方案资源管理器中可见
+# source_group命令可以将文件组织到指定的筛选器（文件夹）中
+source_group(assets FILES ${ASSET_FILES})
 
 # 将 assets 文件夹复制到可执行文件旁边
 # 这一行必须在 add_executable 之后

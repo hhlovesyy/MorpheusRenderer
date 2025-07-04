@@ -17,19 +17,27 @@ namespace Morpheus::Scene {
     }
     // 我们需要一个辅助函数来解析矩阵
     Math::Matrix4f parse_transform(const json& j) {
+        // 从单位矩阵开始
         Math::Matrix4f transform = Math::Matrix4f::Identity();
-        // 这里只是一个简化的例子，你可以扩展它来支持 position, rotation, scale
+
+        // 注意变换顺序：先缩放，再旋转，最后平移
+        // Model = Translate * Rotate * Scale
+
         if (j.contains("scale")) {
+            // 假设 scale 是一个统一的浮点数
             float s = j["scale"];
-            transform.m[0][0] = s;
-            transform.m[1][1] = s;
-            transform.m[2][2] = s;
+            // 或者支持三轴缩放: Math::Vector3f s_vec = { j["scale"][0], ... };
+            transform = transform * Math::Matrix4f::Scale({ s, s, s });
         }
+
+        // if (j.contains("rotation")) { ... 暂未实现 ... }
+
         if (j.contains("position")) {
-            transform.m[0][3] = j["position"][0];
-            transform.m[1][3] = j["position"][1];
-            transform.m[2][3] = j["position"][2];
+            Math::Vector3f p = { j["position"][0], j["position"][1], j["position"][2] };
+            // 注意：我们的 T*R*S 约定要求先应用缩放和旋转，所以平移矩阵要放在最左边乘
+            transform = Math::Matrix4f::Translate(p) * transform;
         }
+
         return transform;
     }
 
@@ -72,8 +80,12 @@ namespace Morpheus::Scene {
             for (const auto& mat_data : data["materials"])
             {
                 auto mat = std::make_shared<Renderer::Material>();
-                mat->color = { mat_data["color"][0], mat_data["color"][1], mat_data["color"][2], mat_data["color"][3] };
-
+                if (mat_data.contains("albedo")) {
+                    mat->albedo = { mat_data["albedo"][0], mat_data["albedo"][1], mat_data["albedo"][2], mat_data["albedo"][3] };
+                }
+                if (mat_data.contains("specular_shininess")) {
+                    mat->specular_shininess = mat_data["specular_shininess"];
+                }
                 // --- 从工厂创建或从缓存获取 Shader ---
                 std::string shader_name = mat_data["shader"];
                 if (scene.m_shaderCache.find(shader_name) == scene.m_shaderCache.end()) {
@@ -113,6 +125,19 @@ namespace Morpheus::Scene {
                 }
 
                 scene.m_objects.push_back(obj);
+            }
+        }
+
+        if (data.contains("lights")) {
+            for (const auto& light_data : data["lights"]) {
+                if (light_data["type"] == "directional") {
+                    DirectionalLight light;
+                    light.direction = { light_data["direction"][0], light_data["direction"][1], light_data["direction"][2] };
+                    // 最好对方向向量进行归一化
+                    light.color = { light_data["color"][0], light_data["color"][1], light_data["color"][2] };
+                    light.intensity = light_data["intensity"];
+                    scene.m_directionalLights.push_back(light);
+                }
             }
         }
 
