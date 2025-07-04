@@ -7,6 +7,7 @@
 #include <iostream>
 #include "../scene/Scene.h"
 #include "IShader.h"
+#include "../renderer/Clipping.h"
 
 namespace Morpheus::Renderer {
     // ... Renderer::Renderer(...) 和 Renderer::DrawLine(...) 函数保持不变 ...
@@ -105,14 +106,23 @@ namespace Morpheus::Renderer {
                 // TODO: 裁剪 (Clipping) 将在这里进行
                 // std::vector<Varyings> clipped_tris = ClipTriangle(...);
                 // for (auto& tri : clipped_tris) { ... }
+                // --- 2. 裁剪 ---
+                std::vector<Varyings> clipped_triangles = ClipTriangle(v0_out, v1_out, v2_out);
 
-                // 3. 透视除法
-                v0_out.position_clip = v0_out.position_clip * (1.0f / v0_out.position_clip.w());
-                v1_out.position_clip = v1_out.position_clip * (1.0f / v1_out.position_clip.w());
-                v2_out.position_clip = v2_out.position_clip * (1.0f / v2_out.position_clip.w());
+                // 3. 遍历裁剪后产生的所有新三角形
+                for (size_t j = 0; j < clipped_triangles.size(); j += 3) {
+                    Varyings& cv0 = clipped_triangles[j];
+                    Varyings& cv1 = clipped_triangles[j + 1];
+                    Varyings& cv2 = clipped_triangles[j + 2];
 
-                // 4. 光栅化
-                RasterizeTriangle(v0_out, v1_out, v2_out, shader);
+                    // 4. 对每个裁剪后的三角形进行透视除法
+                    cv0.position_clip = cv0.position_clip * (1.0f / cv0.position_clip.w());
+                    cv1.position_clip = cv1.position_clip * (1.0f / cv1.position_clip.w());
+                    cv2.position_clip = cv2.position_clip * (1.0f / cv2.position_clip.w());
+
+                    // 5. 光栅化
+                    RasterizeTriangle(cv0, cv1, cv2, shader);
+                }
             }
         }
     }
