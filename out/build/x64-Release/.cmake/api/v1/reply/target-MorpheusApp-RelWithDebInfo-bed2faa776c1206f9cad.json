@@ -265,14 +265,15 @@
 				30,
 				31,
 				32,
-				33
+				33,
+				34
 			]
 		},
 		{
 			"name" : "",
 			"sourceIndexes" : 
 			[
-				34
+				35
 			]
 		}
 	],
@@ -434,6 +435,11 @@
 		{
 			"backtrace" : 9,
 			"path" : "src/renderer/shaders/BlinnPhongShader.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 9,
+			"path" : "src/renderer/shaders/ShadowMapShader.h",
 			"sourceGroupIndex" : 1
 		},
 		{
