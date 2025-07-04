@@ -13,11 +13,28 @@
 namespace Morpheus::Renderer {
     // ... Renderer::Renderer(...) 和 Renderer::DrawLine(...) 函数保持不变 ...
 
+    // --- 构造函数 ---
     Renderer::Renderer(int width, int height) {
         m_framebuffer = std::make_shared<Framebuffer>(width, height);
+        m_numThreads = std::thread::hardware_concurrency();
+        if (m_numThreads == 0) m_numThreads = 4;
+        SDL_Log("Using %u threads for rendering.", m_numThreads);
+
+        const int TILE_SIZE = 64;
+        for (int y = 0; y < height; y += TILE_SIZE) {
+            for (int x = 0; x < width; x += TILE_SIZE) {
+                m_tiles.push_back({
+                    x, y,
+                    std::min(x + TILE_SIZE, width),
+                    std::min(y + TILE_SIZE, height)
+                    });
+            }
+        }
+        // 为 m_tilePackets 预留空间
+        m_tilePackets.resize(m_tiles.size());
     }
 
-    void Renderer::RasterizeTriangle(const Varyings& v0, const Varyings& v1, const Varyings& v2, IShader& shader) {
+    void Renderer::RasterizeTriangle(const Varyings& v0, const Varyings& v1, const Varyings& v2, IShader& shader, const Tile& tile) {
         // 1. 视口变换 (与之前相同，但操作Varyings)
         int w = m_framebuffer->GetWidth();
         int h = m_framebuffer->GetHeight();
@@ -31,9 +48,15 @@ namespace Morpheus::Renderer {
         int maxX = std::min(w - 1, (int)std::ceil(std::max({ p0_screen.x(), p1_screen.x(), p2_screen.x() })));
         int maxY = std::min(h - 1, (int)std::ceil(std::max({ p0_screen.y(), p1_screen.y(), p2_screen.y() })));
 
+        // 求交集
+        int clamped_minX = std::max(minX, tile.minX);
+        int clamped_minY = std::max(minY, tile.minY);
+        int clamped_maxX = std::min(maxX, tile.maxX);
+        int clamped_maxY = std::min(maxY, tile.maxY);
+
         // 3. 遍历包围盒内的每个像素
-        for (int y = minY; y <= maxY; ++y) {
-            for (int x = minX; x <= maxX; ++x) {
+        for (int y = clamped_minY; y < clamped_maxY; ++y) {
+            for (int x = clamped_minX; x <= clamped_maxX; ++x) {
                 // 计算当前像素中心的重心坐标
                 Math::vec<2, float> p = { (float)x + 0.5f, (float)y + 0.5f };
                 Math::vec<2, float> pa = { p0_screen.x(), p0_screen.y() };
@@ -41,6 +64,9 @@ namespace Morpheus::Renderer {
                 Math::vec<2, float> pc = { p2_screen.x(), p2_screen.y() };
 
                 float total_area = (pb.x() - pa.x()) * (pc.y() - pa.y()) - (pc.x() - pa.x()) * (pb.y() - pa.y());
+                // 简单的背面剔除，可以放在这里
+                if (total_area < 0) continue;
+
                 float w0 = ((pb.x() - p.x()) * (pc.y() - p.y()) - (pc.x() - p.x()) * (pb.y() - p.y())) / total_area;
                 float w1 = ((pc.x() - p.x()) * (pa.y() - p.y()) - (pa.x() - p.x()) * (pc.y() - p.y())) / total_area;
                 float w2 = 1.0f - w0 - w1;
@@ -87,10 +113,91 @@ namespace Morpheus::Renderer {
         }
     }
 
-    // --- Render 函数的完整重构 ---
+    // --- 顶层 Render 函数 (现在更简洁) ---
     void Renderer::Render(const Scene::Scene& scene) {
+        // 1. 顶点处理阶段 (单线程)
+        SetupFrame(scene);
+
+        // 2. 三角形分配阶段 (单线程)
+        DistributePacketsToTiles();
+
+        // 3. 瓦块渲染阶段 (多线程)
+        RenderTiles();
+    }
+
+    // --- 新增: DistributePacketsToTiles 函数 (核心逻辑) ---
+    void Renderer::DistributePacketsToTiles() {
+        // 清空上一帧的分配结果
+        for (auto& p_list : m_tilePackets) {
+            p_list.clear();
+        }
+
+        int w = m_framebuffer->GetWidth();
+        int h = m_framebuffer->GetHeight();
+
+        // 遍历所有已处理好的渲染包
+        for (const auto& packet : m_renderPackets) {
+            // 计算 packet 的屏幕包围盒
+            float minX_ndc = std::min({ packet.v0.position_clip.x(), packet.v1.position_clip.x(), packet.v2.position_clip.x() });
+            float minY_ndc = std::min({ packet.v0.position_clip.y(), packet.v1.position_clip.y(), packet.v2.position_clip.y() });
+            float maxX_ndc = std::max({ packet.v0.position_clip.x(), packet.v1.position_clip.x(), packet.v2.position_clip.x() });
+            float maxY_ndc = std::max({ packet.v0.position_clip.y(), packet.v1.position_clip.y(), packet.v2.position_clip.y() });
+
+            int tri_min_x = static_cast<int>(std::floor((minX_ndc + 1.0f) * 0.5f * w));
+            int tri_min_y = static_cast<int>(std::floor((minY_ndc + 1.0f) * 0.5f * h));
+            int tri_max_x = static_cast<int>(std::ceil((maxX_ndc + 1.0f) * 0.5f * w));
+            int tri_max_y = static_cast<int>(std::ceil((maxY_ndc + 1.0f) * 0.5f * h));
+
+            // 找到与三角形包围盒相交的瓦块范围
+            int start_tile_x = std::max(0, tri_min_x / m_tiles[0].maxX); // 假设 TILE_SIZE 固定
+            int end_tile_x = std::min((int)m_tiles.size() / (h / 64) - 1, tri_max_x / m_tiles[0].maxX); // 简化的瓦片索引计算
+            // ... (更精确的瓦片索引计算会更复杂，我们先用一个简单遍历)
+
+            // 遍历所有瓦块，判断相交，并将 packet 指针放入对应的列表
+            for (size_t i = 0; i < m_tiles.size(); ++i) {
+                const auto& tile = m_tiles[i];
+                if (!(tri_max_x < tile.minX || tri_min_x >= tile.maxX ||
+                    tri_max_y < tile.minY || tri_min_y >= tile.maxY))
+                {
+                    m_tilePackets[i].push_back(&packet);
+                }
+            }
+        }
+    }
+
+    // --- RenderTileTask 函数 (现在极其高效) ---
+    void Renderer::RenderTileTask(size_t tile_index) {
+        const Tile& tile = m_tiles[tile_index];
+        const std::vector<const RenderPacket*>& packets_for_this_tile = m_tilePackets[tile_index];
+
+        // 只遍历分配给这个瓦块的、已经筛选过的三角形列表
+        for (const RenderPacket* packet_ptr : packets_for_this_tile) {
+            // 直接调用光栅化，不再需要任何粗粒度剔除
+            RasterizeTriangle(packet_ptr->v0, packet_ptr->v1, packet_ptr->v2, *packet_ptr->shader, tile);
+        }
+    }
+
+    // --- RenderTiles 函数 (现在只负责分发 tile_index) ---
+    void Renderer::RenderTiles() {
+        m_threads.clear();
+        for (size_t i = 0; i < m_numThreads; ++i) {
+            m_threads.emplace_back([this, i]() {
+                for (size_t tile_idx = i; tile_idx < m_tiles.size(); tile_idx += m_numThreads) {
+                    RenderTileTask(tile_idx);
+                }
+                });
+        }
+        for (auto& t : m_threads) {
+            if (t.joinable()) t.join();
+        }
+    }
+
+    // --- Render 函数的完整重构 ---
+    void Renderer::SetupFrame(const Scene::Scene& scene) {
         m_framebuffer->ClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         m_framebuffer->ClearDepth(1.0f);
+
+        m_renderPackets.clear(); // 清空上一帧的渲染包
 
         const auto& camera = scene.GetCamera();
         const Math::Matrix4f& viewMatrix = camera.GetViewMatrix();
@@ -128,22 +235,11 @@ namespace Morpheus::Renderer {
 
             const auto& mesh = *object.mesh;
             for (size_t i = 0; i < mesh.indices.size(); i += 3) {
-                //// --- 步骤 B: 检查索引是否越界 ---
-                //if (mesh.indices[i] >= mesh.vertices.size() ||
-                //    mesh.indices[i + 1] >= mesh.vertices.size() ||
-                //    mesh.indices[i + 2] >= mesh.vertices.size())
-                //{
-                //    SDL_Log("Error: mesh '%s' has out-of-bounds indices!", object.name.c_str());
-                //    continue; // 跳过这个坏掉的三角形
-                //}
                 // 2. 对每个顶点调用顶点着色器
                 Varyings v0_out = shader.VertexShader(mesh.vertices[mesh.indices[i]]);
                 Varyings v1_out = shader.VertexShader(mesh.vertices[mesh.indices[i + 1]]);
                 Varyings v2_out = shader.VertexShader(mesh.vertices[mesh.indices[i + 2]]);
 
-                // TODO: 裁剪 (Clipping) 将在这里进行
-                // std::vector<Varyings> clipped_tris = ClipTriangle(...);
-                // for (auto& tri : clipped_tris) { ... }
                 // --- 2. 裁剪 ---
                 std::vector<Varyings> clipped_triangles = ClipTriangle(v0_out, v1_out, v2_out);
 
@@ -158,9 +254,11 @@ namespace Morpheus::Renderer {
                     cv1.position_clip = cv1.position_clip * (1.0f / cv1.position_clip.w());
                     cv2.position_clip = cv2.position_clip * (1.0f / cv2.position_clip.w());
 
-                    // 5. 光栅化
-                    RasterizeTriangle(cv0, cv1, cv2, shader);
+                    // --- 创建并存储渲染包 ---
+                    // 我们将处理好的顶点和指向当前 shader 的指针打包在一起
+                    m_renderPackets.push_back({ cv0, cv1, cv2, &shader });
                 }
+                
             }
         }
     }
