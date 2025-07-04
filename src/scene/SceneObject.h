@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 
+//Ç°ÏòÉùÃ÷
+namespace Morpheus::Renderer { class Mesh; class Material; }
 namespace Morpheus::Scene {
     
     class SceneObject {

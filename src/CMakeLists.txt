@@ -6,7 +6,7 @@ add_executable(MorpheusApp
     core/Application.cpp
     renderer/Framebuffer.cpp
     renderer/Renderer.cpp
- "renderer/Mesh.cpp" "core/InputManager.cpp" "core/CameraController.cpp" "scene/Camera.cpp" "scene/Scene.cpp")
+ "renderer/Mesh.cpp" "core/InputManager.cpp" "core/CameraController.cpp" "scene/Camera.cpp" "scene/Scene.cpp" "renderer/shaders/UnlitShader.cpp")
 
 # 递归查找所有 .h 文件，以便在VS的解决方案资源管理器中看到它们
 file(GLOB_RECURSE HEADERS "*.h")

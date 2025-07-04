@@ -6,11 +6,25 @@
 #include "../scene/Scene.h"
 #include "InputManager.h"  
 #include "CameraController.h" // <--- 新增
+#include "../renderer/shaders/UnlitShader.h" // <--- 包含我们要注册的 Shader
+
+// --- 在所有 Application 成员函数之前，定义一个辅助函数 ---
+void RegisterShaders() {
+    Morpheus::Scene::Scene::RegisterShader("Unlit", []() {
+        return std::make_shared<Morpheus::Renderer::UnlitShader>();
+        });
+    // 未来在这里注册 PBR Shader 等
+    // Morpheus::Scene::Scene::RegisterShader("PBR", []() { 
+    //     return std::make_shared<Morpheus::Renderer::PBRShader>(); 
+    // });
+}
 
 namespace Morpheus::Core {
 
     Application::Application(const std::string& title, int width, int height)
         : m_title(title), m_width(width), m_height(height) {
+        // --- 在所有初始化之前，先注册 Shaders ---
+        RegisterShaders();
         Initialize();
     }
 

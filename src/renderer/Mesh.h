@@ -3,16 +3,13 @@
 #include "../math/Vector.h"
 #include <vector>
 #include <string>
+#include "Vertex.h"
 
 // 只包含头文件，不进行实现！
 // 我们甚至不需要在这里包含 tiny_obj_loader.h，因为实现细节被隐藏在了 .cpp 文件中
 // 这是一种更好的封装实践，可以减少头文件依赖和编译时间
 
 namespace Morpheus::Renderer {
-    struct Vertex {
-        Math::Vector3f position;
-    };
-
     class Mesh {
     public:
         std::vector<Vertex> vertices;

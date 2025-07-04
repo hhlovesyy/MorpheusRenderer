@@ -1,13 +1,20 @@
 // src/scene/Scene.cpp (新文件)
 #include "Scene.h"
 #include <fstream>
+#include <sstream>
 #include <nlohmann/json.hpp>
 #include <iostream>
+#include "../renderer/IShader.h"
+#include <SDL.h>
 
 using json = nlohmann::json;
+// 初始化静态成员
+std::map<std::string, std::function<std::shared_ptr<Morpheus::Renderer::IShader>()>> Morpheus::Scene::Scene::s_shaderFactory;
 
 namespace Morpheus::Scene {
-
+    void Scene::RegisterShader(const std::string& name, std::function<std::shared_ptr<Renderer::IShader>()> factoryFn) {
+        s_shaderFactory[name] = factoryFn;
+    }
     // 我们需要一个辅助函数来解析矩阵
     Math::Matrix4f parse_transform(const json& j) {
         Math::Matrix4f transform = Math::Matrix4f::Identity();
@@ -32,6 +39,21 @@ namespace Morpheus::Scene {
         if (!f.is_open()) {
             throw std::runtime_error("Failed to open scene file: " + filepath);
         }
+
+        // --- 在这里添加调试代码 ---
+		std::stringstream buffer;
+        buffer << f.rdbuf();
+        std::string file_content = buffer.str();
+
+        // 使用SDL_Log在VS的输出窗口打印，或者直接设置断点查看
+        SDL_Log("--- Start of Scene File Content ---");
+        SDL_Log(file_content.c_str());
+        SDL_Log("--- End of Scene File Content ---");
+
+        // 将文件流的读取位置重置到开头
+        f.seekg(0);
+        // -------------------------
+
         json data = json::parse(f);
 
         // 加载相机设置
@@ -45,10 +67,27 @@ namespace Morpheus::Scene {
         }
 
         // 加载材质
-        if (data.contains("materials")) {
-            for (const auto& mat_data : data["materials"]) {
+        if (data.contains("materials"))
+        {
+            for (const auto& mat_data : data["materials"])
+            {
                 auto mat = std::make_shared<Renderer::Material>();
                 mat->color = { mat_data["color"][0], mat_data["color"][1], mat_data["color"][2], mat_data["color"][3] };
+
+                // --- 从工厂创建或从缓存获取 Shader ---
+                std::string shader_name = mat_data["shader"];
+                if (scene.m_shaderCache.find(shader_name) == scene.m_shaderCache.end()) {
+                    // 如果缓存中没有，就从工厂创建一个新的
+                    if (s_shaderFactory.count(shader_name)) {
+                        scene.m_shaderCache[shader_name] = s_shaderFactory[shader_name]();
+                    }
+                    else {
+                        // 抛出错误或使用一个默认的fallback shader
+                        throw std::runtime_error("Shader not registered: " + shader_name);
+                    }
+                }
+                mat->shader = scene.m_shaderCache[shader_name]; // 关联 Shader
+
                 scene.m_materialCache[mat_data["name"]] = mat;
             }
         }
