@@ -34,7 +34,7 @@ namespace Morpheus::Renderer {
         m_tilePackets.resize(m_tiles.size());
     }
 
-    void Renderer::RasterizeTriangle(const Varyings& v0, const Varyings& v1, const Varyings& v2, IShader& shader, const Tile& tile, bool is_transparent_pass) {
+    void Renderer::RasterizeTriangle(const Varyings& v0, const Varyings& v1, const Varyings& v2, IShader& shader, const Tile& tile, const RenderState& renderState) {
         // 1. 视口变换 (与之前相同，但操作Varyings)
         int w = m_framebuffer->GetWidth();
         int h = m_framebuffer->GetHeight();
@@ -107,7 +107,7 @@ namespace Morpheus::Renderer {
                     Math::Vector4f final_color = shader.FragmentShader(interpolated_varyings);
 
                     // 6. 写入帧缓冲 (深度测试)
-                    m_framebuffer->SetPixel(x, y, z_interp, final_color, !is_transparent_pass, is_transparent_pass);
+                    m_framebuffer->SetPixel(x, y, z_interp, final_color, renderState);
                 }
             }
         }
@@ -176,14 +176,48 @@ namespace Morpheus::Renderer {
 
                     // --- 创建并存储渲染包 ---
                     // 我们将处理好的顶点和指向当前 shader 的指针打包在一起
-                    m_renderPackets.push_back({ cv0, cv1, cv2, &shader });
+                    // --- 创建 RenderPacket 并填充 RenderState ---
+                    RenderPacket packet;
+                    packet.v0 = cv0;
+                    packet.v1 = cv1;
+                    packet.v2 = cv2;
+                    packet.shader = &shader; // 存储指向 shader 的指针
+
+                    // --- 构建 RenderState for this Packet ---
+                    RenderState packetRenderState;
+                    packetRenderState.targetFramebuffer = m_framebuffer.get(); // 当前主帧缓冲
+
+                    // 根据材质和 pass 类型设置 flags
+                    bool is_transparent_material = false;
+                    if (material.render_queue == RenderQueue::Transparent) {
+                        is_transparent_material = true;
+                    }
+
+                    if (is_transparent_material) {
+                        packetRenderState.AddFlags(RenderStateFlags::BlendEnable);
+                        packetRenderState.RemoveFlags(RenderStateFlags::DepthWriteEnable); // 半透明默认不写深度
+                        packetRenderState.AddFlags(RenderStateFlags::DepthTestEnable);
+                    }
+                    else {
+                        packetRenderState.RemoveFlags(RenderStateFlags::BlendEnable);
+                        packetRenderState.AddFlags(RenderStateFlags::DepthWriteEnable);
+                        packetRenderState.AddFlags(RenderStateFlags::DepthTestEnable);
+                    }
+                    // 默认开启背面剔除
+                    packetRenderState.AddFlags(RenderStateFlags::CullFaceEnable);
+
+                    // --- 重要: 暂存 RenderState 到 RenderPacket ---
+                    packet.renderState = packetRenderState; // 直接赋值
+
+                    // --- 将 RenderPacket 添加到全局列表中 ---
+                    m_renderPackets.push_back(packet); // push_back(packet)
                 }
             }
             if (!m_renderPackets.empty()) {
                 DistributePacketsToTiles();
 
                 // --- 修改 RenderTiles，让它知道当前是什么 Pass ---
-                RenderTiles(is_transparent_pass);
+                RenderTiles();
             }
         }
     }
@@ -229,24 +263,24 @@ namespace Morpheus::Renderer {
     }
 
     // --- RenderTileTask 函数 (现在极其高效) ---
-    void Renderer::RenderTileTask(size_t tile_index, bool is_transparent_pass) {
+    void Renderer::RenderTileTask(size_t tile_index) {
         const Tile& tile = m_tiles[tile_index];
         const std::vector<const RenderPacket*>& packets_for_this_tile = m_tilePackets[tile_index];
 
         // 只遍历分配给这个瓦块的、已经筛选过的三角形列表
         for (const RenderPacket* packet_ptr : packets_for_this_tile) {
             // 直接调用光栅化，不再需要任何粗粒度剔除
-            RasterizeTriangle(packet_ptr->v0, packet_ptr->v1, packet_ptr->v2, *packet_ptr->shader, tile, is_transparent_pass);
+            RasterizeTriangle(packet_ptr->v0, packet_ptr->v1, packet_ptr->v2, *packet_ptr->shader, tile, packet_ptr->renderState);
         }
     }
 
     // --- RenderTiles 函数 (现在只负责分发 tile_index) ---
-    void Renderer::RenderTiles(bool is_transparent_pass) {
+    void Renderer::RenderTiles() {
         m_threads.clear();
         for (size_t i = 0; i < m_numThreads; ++i) {
-            m_threads.emplace_back([this, i, is_transparent_pass]() {
+            m_threads.emplace_back([this, i]() {
                 for (size_t tile_idx = i; tile_idx < m_tiles.size(); tile_idx += m_numThreads) {
-                    RenderTileTask(tile_idx, is_transparent_pass);
+                    RenderTileTask(tile_idx);
                 }
                 });
         }

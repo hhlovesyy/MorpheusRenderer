@@ -11,6 +11,12 @@ namespace Morpheus::Renderer {
         // position_clip 也是线性插值，因为我们还没做透视除法
         result.position_clip = v0.position_clip * (1.0f - t) + v1.position_clip * t;
         result.color = v0.color * (1.0f - t) + v1.color * t;
+		result.world_pos = v0.world_pos * (1.0f - t) + v1.world_pos * t;
+		result.world_normal = v0.world_normal * (1.0f - t) + v1.world_normal * t;
+		result.uv = v0.uv * (1.0f - t) + v1.uv * t;
+		result.tangent_space_light_dir = v0.tangent_space_light_dir * (1.0f - t) + v1.tangent_space_light_dir * t;
+		result.tangent_space_view_dir = v0.tangent_space_view_dir * (1.0f - t) + v1.tangent_space_view_dir * t;
+
         // 未来在这里插值 normal, uv, world_pos 等
         return result;
     }
