@@ -15,6 +15,24 @@ namespace Morpheus::Renderer {
         stbi_image_free(data); // stb_image 加载后需要释放内存
     }
 
+    // --- 实现 sRGB -> Linear 转换 ---
+    // 这个实现基于 ITU-R BT.709 标准
+    Math::Vector4f Texture::srgb_to_linear(const Math::Vector4f& srgb_color) {
+        // Alpha 通道不需要转换
+        Math::Vector4f linear_color = srgb_color;
+
+        for (int i = 0; i < 3; ++i) { // R, G, B
+            float c = srgb_color[i];
+            if (c <= 0.04045f) {
+                linear_color[i] = c / 12.92f;
+            }
+            else {
+                linear_color[i] = std::pow((c + 0.055f) / 1.055f, 2.4f);
+            }
+        }
+        return linear_color;
+    }
+
     std::shared_ptr<Texture> Texture::Load(const std::string& filepath) {
         int width, height, channels;
         // 强制加载为4通道 (RGBA)，方便处理
@@ -51,6 +69,6 @@ namespace Morpheus::Renderer {
         float b = m_data[index + 2] / 255.0f;
         float a = (m_channels == 4) ? m_data[index + 3] / 255.0f : 1.0f;
 
-        return { r, g, b, a };
+        return { r, g, b, a }; //todo:Linear2srgb的逻辑需要进行额外判断，有些贴图需要转，有些则不用转
     }
 }

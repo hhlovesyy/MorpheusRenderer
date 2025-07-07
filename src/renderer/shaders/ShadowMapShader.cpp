@@ -9,7 +9,7 @@ namespace Morpheus::Renderer {
         return out;
     }
 
-    Math::Vector4f ShadowMapShader::FragmentShader(const Varyings& in) {
+    Math::Vector4f ShadowMapShader::FragmentShader(const Varyings& in, const RenderState& renderState) {
         // 片元着色器什么都不用做，因为我们只关心深度
         // 返回一个无关紧要的颜色
         return { 0.0f, 0.0f, 0.0f, 1.0f };

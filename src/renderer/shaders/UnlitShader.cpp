@@ -12,7 +12,7 @@ namespace Morpheus::Renderer {
         return out;
     }
 
-    Math::Vector4f UnlitShader::FragmentShader(const Varyings& in) {
+    Math::Vector4f UnlitShader::FragmentShader(const Varyings& in, const RenderState& renderState) {
         return { in.color.x(), in.color.y(), in.color.z(), 1.0f };
     }
 }

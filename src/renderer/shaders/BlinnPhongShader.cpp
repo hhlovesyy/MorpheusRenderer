@@ -48,7 +48,7 @@ namespace Morpheus::Renderer {
         return out;
     }
 
-    Math::Vector4f BlinnPhongShader::FragmentShader(const Varyings& in) {
+    Math::Vector4f BlinnPhongShader::FragmentShader(const Varyings& in, const RenderState& renderState) {
         // --- 1. 获取 Albedo 颜色 ---
         // 这是最终与光照结果相乘的基础色
         auto albedo_factor = std::any_cast<Math::Vector4f>(uniforms["u_albedo_factor"]);

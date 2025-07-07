@@ -104,7 +104,7 @@ namespace Morpheus::Renderer {
 						(v1.tangent_space_view_dir * one_over_w1) * w1 + (v2.tangent_space_view_dir * one_over_w2) * w2) * w_interp;
 
                     // 5. 调用片元着色器
-                    Math::Vector4f final_color = shader.FragmentShader(interpolated_varyings);
+                    Math::Vector4f final_color = shader.FragmentShader(interpolated_varyings, renderState);
 
                     // 6. 写入帧缓冲 (深度测试)
                     m_framebuffer->SetPixel(x, y, z_interp, final_color, renderState);

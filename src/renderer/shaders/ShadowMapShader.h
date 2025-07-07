@@ -5,6 +5,6 @@ namespace Morpheus::Renderer {
     class ShadowMapShader : public IShader {
     public:
         Varyings VertexShader(const Vertex& in) override;
-        Math::Vector4f FragmentShader(const Varyings& in) override;
+        Math::Vector4f FragmentShader(const Varyings& in, const RenderState& renderState) override;
     };
 }
